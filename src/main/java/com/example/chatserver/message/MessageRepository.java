@@ -23,16 +23,22 @@ public class MessageRepository {
     @JoinColumn(name = "receiver_id", referencedColumnName = "userId")
     private UserRepository receiver;
 
+    @Column(name = "content")
     private String content;
+    @Column(name = "timestamp")
     private long timestamp;
+    @Column(name = "is_read")
     private boolean isRead;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "chat_room_id", referencedColumnName = "id")
     private ChatroomRepository chatRoom;
 
+    @Column(name = "type")
     private String type; // e.g., text, image, video
+    @Column(name = "status")
     private String status; // e.g., sent, delivered, seen
+    @Column(name = "last_message")
     private String lastMessage; // Last message in the chatroom
 
     @OneToOne(fetch = FetchType.LAZY)

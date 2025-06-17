@@ -1,5 +1,6 @@
 package com.example.chatserver.user;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -12,12 +13,19 @@ public class UserRepository {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long userId;
 
+    @Column(name = "username")
     private String username;
+    @Column(name = "email")
     private String email;
+    @Column(name = "password")
     private String password; // In a real application, this should be hashed
+    @Column(name = "name")
     private String name;
+    @Column(name = "profile_picture_url")
     private String profilePictureUrl;
+    @Column(name = "status")
     private String status; // e.g., online, offline, away
+    @Column(name = "last_active")
     private long lastActive; // Timestamp of the last activity
 
     public UserRepository() {
