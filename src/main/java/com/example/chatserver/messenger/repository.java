@@ -1,21 +1,21 @@
-package com.example.chatserver.model;
+package com.example.chatserver.messenger;
 
 import jakarta.persistence.*;
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "message")
-public class message {
+public class repository {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     String messageId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "sender_id", referencedColumnName = "id")
-    private user sender;
+    private com.example.chatserver.user.repository sender;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "receiver_id", referencedColumnName = "id")
-    private user receiver;
+    private com.example.chatserver.user.repository receiver;
 
     String content;
     long timestamp;
@@ -23,18 +23,18 @@ public class message {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "chat_room_id", referencedColumnName = "id")
-    private  chatroom chatRoom;
+    private jakarta.persistence.Entity chatRoom;
 
     String type; // e.g., text, image, video
     String status; // e.g., sent, delivered, seen
 
     @OneToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "reply_to_message_id", referencedColumnName = "messageId")
-    private message replyToMessage; // Message being replied to, if any
+    private repository replyToMessage; // Message being replied to, if any
     String reaction; // e.g., like, love, laugh, etc
 
     // Default constructor
-    public message(String messageId, user sender, user receiver, String content, long timestamp, boolean isRead, chatroom chatRoom, String type, String status, message replyToMessage, String reaction) {
+    public repository(String messageId, com.example.chatserver.user.repository sender, com.example.chatserver.user.repository receiver, String content, long timestamp, boolean isRead, jakarta.persistence.Entity chatRoom, String type, String status, repository replyToMessage, String reaction) {
         this.messageId = messageId;
         this.sender = sender;
         this.receiver = receiver;
@@ -58,19 +58,19 @@ public class message {
         this.messageId = messageId;
     }
 
-    public user getSender() {
+    public com.example.chatserver.user.repository getSender() {
         return sender;
     }
 
-    public void setSender(user sender) {
+    public void setSender(com.example.chatserver.user.repository sender) {
         this.sender = sender;
     }
 
-    public user getReceiver() {
+    public com.example.chatserver.user.repository getReceiver() {
         return receiver;
     }
 
-    public void setReceiver(user receiver) {
+    public void setReceiver(com.example.chatserver.user.repository receiver) {
         this.receiver = receiver;
     }
 
@@ -98,11 +98,11 @@ public class message {
         isRead = read;
     }
 
-    public chatroom getChatRoom() {
+    public jakarta.persistence.Entity getChatRoom() {
         return chatRoom;
     }
 
-    public void setChatRoom(chatroom chatRoom) {
+    public void setChatRoom(jakarta.persistence.Entity chatRoom) {
         this.chatRoom = chatRoom;
     }
 
@@ -122,11 +122,11 @@ public class message {
         this.status = status;
     }
 
-    public message getReplyToMessage() {
+    public repository getReplyToMessage() {
         return replyToMessage;
     }
 
-    public void setReplyToMessage(message replyToMessage) {
+    public void setReplyToMessage(repository replyToMessage) {
         this.replyToMessage = replyToMessage;
     }
 

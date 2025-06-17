@@ -1,11 +1,10 @@
-package com.example.chatserver.model;
+package com.example.chatserver.user;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "user")
-public class user {
+public class repository {
     String userId;
     String username;
     String email;
@@ -15,7 +14,7 @@ public class user {
     String status; // e.g., online, offline, away
     long lastActive; // Timestamp of the last activity
 
-    public user(String userId, String username, String email, String password, String profilePictureUrl, String status, long lastActive) {
+    public repository(String userId, String username, String email, String password, String profilePictureUrl, String status, long lastActive) {
         this.userId = userId;
         this.username = username;
         this.email = email;

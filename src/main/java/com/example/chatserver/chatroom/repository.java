@@ -1,12 +1,12 @@
-package com.example.chatserver.model;
+package com.example.chatserver.chatroom;
 
 import jakarta.persistence.*;
 import java.util.Set;
 import java.util.HashSet;
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "chatroom")
-public class chatroom {
+public class repository {
     @Id @GeneratedValue
     private Long id;
     private String name;
@@ -21,7 +21,7 @@ public class chatroom {
             joinColumns = @JoinColumn(name = "chatroom_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private Set<user> participants = new HashSet<>();
+    private Set<com.example.chatserver.user.repository> participants = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
@@ -29,7 +29,7 @@ public class chatroom {
             joinColumns = @JoinColumn(name = "chatroom_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private Set<user> admins = new HashSet<>();
+    private Set<com.example.chatserver.user.repository> admins = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
@@ -37,10 +37,10 @@ public class chatroom {
             joinColumns = @JoinColumn(name = "chatroom_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private Set<user> bannedUsers = new HashSet<>();
+    private Set<com.example.chatserver.user.repository> bannedUsers = new HashSet<>();
 
     // Default constructor
-    public chatroom(Long id, String name, String createdBy, long createdAt, boolean isActive, String profilePictureUrl, Set<user> participants, Set<user> admins, Set<user> bannedUsers) {
+    public repository(Long id, String name, String createdBy, long createdAt, boolean isActive, String profilePictureUrl, Set<com.example.chatserver.user.repository> participants, Set<com.example.chatserver.user.repository> admins, Set<com.example.chatserver.user.repository> bannedUsers) {
         this.id = id;
         this.name = name;
         this.createdBy = createdBy;
@@ -102,27 +102,27 @@ public class chatroom {
         this.profilePictureUrl = profilePictureUrl;
     }
 
-    public Set<user> getParticipants() {
+    public Set<com.example.chatserver.user.repository> getParticipants() {
         return participants;
     }
 
-    public void setParticipants(Set<user> participants) {
+    public void setParticipants(Set<com.example.chatserver.user.repository> participants) {
         this.participants = participants;
     }
 
-    public Set<user> getAdmins() {
+    public Set<com.example.chatserver.user.repository> getAdmins() {
         return admins;
     }
 
-    public void setAdmins(Set<user> admins) {
+    public void setAdmins(Set<com.example.chatserver.user.repository> admins) {
         this.admins = admins;
     }
 
-    public Set<user> getBannedUsers() {
+    public Set<com.example.chatserver.user.repository> getBannedUsers() {
         return bannedUsers;
     }
 
-    public void setBannedUsers(Set<user> bannedUsers) {
+    public void setBannedUsers(Set<com.example.chatserver.user.repository> bannedUsers) {
         this.bannedUsers = bannedUsers;
     }
 }
