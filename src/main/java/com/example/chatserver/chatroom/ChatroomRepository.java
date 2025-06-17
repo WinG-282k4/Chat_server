@@ -10,7 +10,7 @@ import java.util.HashSet;
 public class ChatroomRepository {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name")
@@ -66,6 +66,16 @@ public class ChatroomRepository {
     }
 
     // Getters and Setters
+
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
     public Long getId() {
         return id;
     }
