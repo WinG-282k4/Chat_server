@@ -1,23 +1,23 @@
 package com.example.chatserver.message_interaction;
 
-import com.example.chatserver.message.MessageRepository;
-import com.example.chatserver.user.UserRepository;
+import com.example.chatserver.message.Messages;
+import com.example.chatserver.user.User;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "message_interactions")
-public class MessageInteractionRepository {
+public class MessageInteraction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long MessageInteractionId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "message_id", nullable = false)
-    private MessageRepository message;
+    private Messages message;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserRepository user;
+    private User user;
 
     @Column(nullable = false, length = 20)
     private String type;  // e.g., "LIKE", "LOVE", "HAHA"
@@ -25,35 +25,36 @@ public class MessageInteractionRepository {
     @Column(nullable = false)
     private long timestamp; // lưu khi người dùng tương tác
 
-    public MessageInteractionRepository(Long id, MessageRepository message, UserRepository user, String type, long timestamp) {
-        this.id = id;
+    public MessageInteraction() {
+        // Default constructor
+    }
+    public MessageInteraction(Messages message, User user, String type, long timestamp) {
         this.message = message;
         this.user = user;
         this.type = type;
         this.timestamp = timestamp;
     }
-
-    public Long getId() {
-        return id;
+    // Getters and Setters
+    public Long getMessageInteractionId() {
+        return MessageInteractionId;
+    }
+    public void setMessageInteractionId(Long messageInteractionId) {
+        MessageInteractionId = messageInteractionId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public MessageRepository getMessage() {
+    public Messages getMessage() {
         return message;
     }
 
-    public void setMessage(MessageRepository message) {
+    public void setMessage(Messages message) {
         this.message = message;
     }
 
-    public UserRepository getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(UserRepository user) {
+    public void setUser(User user) {
         this.user = user;
     }
 
