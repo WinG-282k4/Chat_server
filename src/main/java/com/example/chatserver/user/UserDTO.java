@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserDTO {
 
-    private Long id;
+    private Long userId;
     private String username;
     private String email;
 
@@ -14,18 +14,18 @@ public class UserDTO {
     }
 
     public UserDTO(Long id, String username, String email) {
-        this.id = id;
+        this.userId = id;
         this.username = username;
         this.email = email;
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getUsername() {

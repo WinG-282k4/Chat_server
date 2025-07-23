@@ -23,27 +23,31 @@ public class User {
     private String password; // In a real application, this should be hashed
     @Column(name = "name")
     private String name;
-    @Column(name = "profile_picture_url")
-    private String profilePictureUrl;
-    @Column(name = "status")
-    private String status; // e.g., online, offline, away
-    @Column(name = "last_active")
-    private long lastActive; // Timestamp of the last activity
+
+    @Column(name = "is_verify")
+    private Boolean isVerify;
 
     public User() {
         // Default constructor
     }
-    public User(String username, String email, String password, String name, String profilePictureUrl, String status, long lastActive) {
+    public User(String username, String email, String password, String name, boolean isVerify) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.name = name;
-        this.profilePictureUrl = profilePictureUrl;
-        this.status = status;
-        this.lastActive = lastActive;
+        this.isVerify = isVerify;
     }
 
     // Getters and Setters
+
+
+    public boolean isVerify() {
+        return isVerify;
+    }
+
+    public void setVerify(boolean verify) {
+        isVerify = verify;
+    }
 
     public Long getUserId() {
         return userId;
@@ -85,27 +89,4 @@ public class User {
         this.name = name;
     }
 
-    public String getProfilePictureUrl() {
-        return profilePictureUrl;
-    }
-
-    public void setProfilePictureUrl(String profilePictureUrl) {
-        this.profilePictureUrl = profilePictureUrl;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public long getLastActive() {
-        return lastActive;
-    }
-
-    public void setLastActive(long lastActive) {
-        this.lastActive = lastActive;
-    }
 }
