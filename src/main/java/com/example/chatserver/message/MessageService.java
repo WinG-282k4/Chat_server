@@ -1,27 +1,25 @@
 package com.example.chatserver.message;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import java.util.List;
-
+@Service
 public class MessageService {
     @Autowired
     private MessageRepository messageRepository;
 
+    @Autowired
+    private MessageMapper messageConvecter;
+
     // This class will contain business logic related to messages
     // For example, methods to create, update, delete, and retrieve messages
 
-    // Example method to create a new message
-    public Messages createMessage(Messages message) {
-         // Logic to save the message to the database
-         return messageRepository.save(message);
-     }
-
-//    Example method to get all messages
-     public List<Messages> getAllMessages() {
-         return messageRepository.findAll();
-     }
-
-    // Add more methods as needed for your application
+    @Transactional
+    public Messages save(Messages msg) {
+        // Set the timestamp
+        msg.setTimestamp(System.currentTimeMillis());
+        return messageRepository.save(msg);
+    }
 
 }

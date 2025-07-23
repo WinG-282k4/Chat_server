@@ -1,5 +1,6 @@
 package com.example.chatserver.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -7,6 +8,7 @@ import jakarta.persistence.Table;
 
 @jakarta.persistence.Entity
 @Table(name = "user")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id

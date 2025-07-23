@@ -49,7 +49,6 @@ public class Chatroom {
     }
 
     // Getters and Setters
-
     public Long getChatroomId() {
         return chatroomId;
     }

@@ -1,4 +1,6 @@
 package com.example.chatserver.user;
 
-public class service {
+public class UserMapper {
+
+
 }

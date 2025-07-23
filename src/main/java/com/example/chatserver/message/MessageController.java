@@ -1,18 +1,12 @@
 package com.example.chatserver.message;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.example.chatserver.common.ApiResponse;
+import com.example.chatserver.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -36,49 +30,67 @@ public class MessageController {
     @Autowired
     private MessageRepository messageRepo;
 
+    @Autowired
+    private MessageService messageService;
+
+    @Autowired
+    private MessageMapper Mapper;
+
     // GET tất cả message
     @GetMapping
-    public List<Messages> getAllMessages() {
-        return messageRepo.findAll();
+    public ApiResponse getAllMessages() {
+        List<Messages> messages = messageRepo.findAll();
+        List<MessageDTO> messageDTOs = messages.stream()
+                .map(Mapper::toDTO)
+                .toList();
+        return new ApiResponse("success", "Get all messages success", messageDTOs);
     }
 
     // GET message theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<Messages> getMessageById(@PathVariable Long id) {
-        return messageRepo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ApiResponse getMessage(@PathVariable Long id) {
+        List<Messages> message = messageRepo.findById(id)
+                .map(List::of)
+                .orElse(List.of());
+        List<MessageDTO> messageDTOs = message.stream()
+                .map(Mapper::toDTO)
+                .toList();
+        return new ApiResponse("success", "Get message success", messageDTOs);
     }
 
 
     // POST tạo message mới
     @PostMapping
-    public Messages createMessage(@RequestBody Messages message) {
-        return messageRepo.save(message);
+    public ApiResponse createMessage(@RequestBody MessageDTO message) {
+
+        return null;
     }
 
     // PUT cập nhật message theo ID
     @PutMapping("/{id}")
-    public Messages updateMessage(
+    public ApiResponse updateMessage(
             @PathVariable Long id,
-            @RequestBody Messages newMessage
+            @RequestBody MessageDTO newMessage
     ) {
-        return messageRepo.findById(id)
-                .map(msg -> {
-                    msg.setContent(newMessage.getContent());
-                    msg.setTimestamp(newMessage.getTimestamp());
-                    msg.setType(newMessage.getType());
-                    msg.setStatus(newMessage.getStatus());
-                    msg.setLastMessage(newMessage.getLastMessage());
-                    // set thêm các trường khác nếu cần
-                    return messageRepo.save(msg);
-                })
-                .orElse(null);
+        try {
+            // Kiểm tra xem message có tồn tại không
+            Messages updateMessage = messageRepo.findById(id).orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
+            // mapping partial update trực tiếp
+            Optional.ofNullable(newMessage.getContent()).ifPresent(updateMessage::setContent);
+            Optional.ofNullable(newMessage.getContent()).ifPresent(updateMessage::setContent);
+            Optional.ofNullable(newMessage.getType()).ifPresent(updateMessage::setType);
+            Optional.ofNullable(newMessage.getStatus()).ifPresent(updateMessage::setStatus);
+
+            return new ApiResponse("success", "Update message success", Mapper.toDTO(messageService.save(updateMessage)));
+        }catch (Exception e){
+            return new ApiResponse("error", "Update message failed: " + e.getMessage(), null);
+        }
     }
 
     // DELETE message theo ID
     @DeleteMapping("/{id}")
-    public void deleteMessage(@PathVariable Long id) {
+    public ApiResponse deleteMessage(@PathVariable Long id) {
         messageRepo.deleteById(id);
+        return new ApiResponse("success", "Delete message success", null);
     }
 }

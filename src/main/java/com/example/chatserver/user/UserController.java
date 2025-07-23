@@ -1,4 +1,4 @@
 package com.example.chatserver.user;
 
-public class controller {
+public class UserController {
 }

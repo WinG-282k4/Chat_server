@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @jakarta.persistence.Entity
-@Table(name = "messenger")
+@Table(name = "messages")
 public class Messages {
 
     @Id
@@ -28,19 +28,15 @@ public class Messages {
     private String content;
     @Column(name = "timestamp")
     private long timestamp;
-    @Column(name = "is_read")
-    private boolean isRead;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "chat_room_id", referencedColumnName = "chatroomid")
+    @JoinColumn(name = "chat_room_id", referencedColumnName = "chatroomId")
     private Chatroom chatRoom;
 
     @Column(name = "type")
     private String type; // e.g., text, image, video
     @Column(name = "status")
     private String status; // e.g., sent, delivered, seen
-    @Column(name = "last_message")
-    private String lastMessage; // Last message in the chatroom
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reply_to_message_id", referencedColumnName = "messageId")
@@ -58,6 +54,10 @@ public class Messages {
 
     public Messages() {
         // Default constructor
+    }
+
+    public Messages(Long messageId){
+        this.messageId = messageId;
     }
 
     public Long getMessageId() {
@@ -100,14 +100,6 @@ public class Messages {
         this.timestamp = timestamp;
     }
 
-    public boolean isRead() {
-        return isRead;
-    }
-
-    public void setRead(boolean read) {
-        isRead = read;
-    }
-
     public Chatroom getChatRoom() {
         return chatRoom;
     }
@@ -130,14 +122,6 @@ public class Messages {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getLastMessage() {
-        return lastMessage;
-    }
-
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
     }
 
     public Messages getReplyToMessage() {
