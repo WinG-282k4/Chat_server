@@ -19,6 +19,7 @@ public interface MessageMapper {
     @Mapping(source = "receiverID", target = "receiver.userId")
     @Mapping(source = "chatRoomID", target = "chatRoom.chatroomId")
     @Mapping(source = "replyToMessageId", target = "replyToMessage.messageId")
+    @Mapping(target = "interactions", ignore = true) // Assuming interraction is not needed in the DTO
     Messages toEntity(MessageDTO dto);
 
     // Các phương thức khác nếu cần thiết

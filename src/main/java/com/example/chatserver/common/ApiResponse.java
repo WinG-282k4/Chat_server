@@ -1,7 +1,5 @@
 package com.example.chatserver.common;
 
-import com.example.chatserver.message.MessageDTO;
-
 public class ApiResponse {
     private String status;
     private String message;

@@ -24,8 +24,8 @@ public class User {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "is_verify")
-    private Boolean isVerify;
+    @Column(name = "verify")
+    private Boolean verify;
 
     public User() {
         // Default constructor
@@ -35,18 +35,18 @@ public class User {
         this.email = email;
         this.password = password;
         this.name = name;
-        this.isVerify = isVerify;
+        this.verify = isVerify;
     }
 
     // Getters and Setters
 
 
-    public boolean isVerify() {
-        return isVerify;
+    public Boolean getVerify() {
+        return verify;
     }
 
-    public void setVerify(boolean verify) {
-        isVerify = verify;
+    public void setVerify(Boolean verify) {
+        this.verify = verify;
     }
 
     public Long getUserId() {

@@ -1,9 +1,10 @@
 package com.example.chatserver.user;
 
+import com.example.chatserver.common.ApiResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
+    private static final Log log = LogFactory.getLog(UserController.class);
     @Autowired
     private UserService userService;
 
@@ -25,5 +27,12 @@ public class UserController {
         return Repository.findAll().stream()
                 .map(userMapper::toDto)
                 .toList();
+    }
+
+    @PostMapping("/register")
+    public ApiResponse createUser(@RequestBody UserDTO userDto) {
+        // Logic to create a user
+        log.debug("[UserController] Password from request: " + userDto.getPassword());
+        return new ApiResponse("success","User created successfully", userService.createUser(userDto));
     }
 }

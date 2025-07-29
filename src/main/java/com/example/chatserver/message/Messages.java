@@ -52,6 +52,9 @@ public class Messages {
                 .count();
     }
 
+    @Column(name = "like_count")
+    private long likeCount;
+
     public Messages() {
         // Default constructor
     }
@@ -138,5 +141,13 @@ public class Messages {
 
     public void setInteractions(List<MessageInteraction> interactions) {
         this.interactions = interactions;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(long likeCount) {
+        this.likeCount = likeCount;
     }
 }
