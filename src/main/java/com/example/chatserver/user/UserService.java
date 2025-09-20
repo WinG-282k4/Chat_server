@@ -1,19 +1,22 @@
 package com.example.chatserver.user;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+
 @Component
 public class UserService {
 
+    private static final Log log = LogFactory.getLog(UserService.class);
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private UserMapper userMapper;
-
     // This service can be used to handle user-related business logic
     // For example, methods to create, update, delete users, etc.
 
@@ -45,4 +48,6 @@ public class UserService {
     public UserDTO findUserById(Long userId) {
         return null;
     }
+
 }
+
