@@ -1,64 +1,69 @@
-# Chatserver
+# Chatserver Project
 
-A simple chat server application built with Java, Spring Boot, and JPA.
-
-## Features
-- User authentication and management
-- Real-time chat between users
-- Support for chat rooms
-- Message reactions and replies
-- Message status tracking (sent, delivered, seen)
+## Overview
+A Spring Boot-based chat server supporting authentication, chat rooms, messaging, and user management.
 
 ## Project Structure
+
 ```
-src/
-  main/
-    java/
-      com/example/chatserver/
-        controller/      # REST controllers
-        model/           # JPA entities (user, message, chatroom)
-        repository/      # Spring Data JPA repositories
-        service/         # Business logic
-    resources/
-      application.properties
-      static/
-      templates/
-  test/
-    java/
-      com/example/chatserver/
+chatserver/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/example/chatserver/
+│   │   │       ├── ChatserverApplication.java
+│   │   │       ├── authentication/         # Auth logic (controllers, services, models)
+│   │   │       ├── chatroom/               # Chat room logic
+│   │   │       ├── Chatroomparticipant/    # Chatroom participant management
+│   │   │       ├── common/                 # Common utilities and responses
+│   │   │       ├── config/                 # Configuration classes
+│   │   │       ├── message/                # Messaging logic
+│   │   │       ├── message_interaction/    # Message interaction logic
+│   │   │       ├── security/               # Security (JWT, filters, config)
+│   │   │       └── user/                   # User management
+│   │   ├── resources/
+│   │   │   ├── application.properties      # App configuration
+│   │   │   ├── static/                     # Static resources
+│   │   │   └── templates/                  # View templates
+│   └── test/
+│       └── java/
+│           └── com/example/chatserver/
+│               └── ChatserverApplicationTests.java
+├── pom.xml                                 # Maven build file
+├── README.md                               # Project documentation
+├── HELP.md                                 # Spring Boot help
 ```
 
-## Getting Started
+## How to Build & Run
 
-### Prerequisites
-- Java 17 or newer
-- Maven 3.6+
-
-### Build and Run
-1. Clone the repository:
-   ```sh
-   git clone <repo-url>
-   cd chatserver
+1. **Build:**
    ```
-2. Build the project:
-   ```sh
-   ./mvnw clean install
+   mvn clean install
    ```
-3. Run the application:
-   ```sh
-   ./mvnw spring-boot:run
+2. **Run:**
+   ```
+   mvn spring-boot:run
    ```
 
-### Configuration
-Edit `src/main/resources/application.properties` to configure database and server settings.
+## Main Features
+- User registration & authentication (JWT)
+- Chat room creation & management
+- Messaging between users
+- Message interactions (like, reply, etc.)
+- Role-based access control
 
-## Usage
-- Access the API endpoints via Postman or a frontend client.
-- Default port: `8080`
+## Configuration
+Edit `src/main/resources/application.properties` for database and JWT settings.
+
+## API Endpoints
+- `/api/auth/*` — Authentication
+- `/api/user/*` — User management
+- `/api/chatroom/*` — Chat room operations
+- `/api/message/*` — Messaging
 
 ## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Pull requests and issues are welcome!
 
 ## License
-This project is licensed under the MIT License.
+MIT
 
