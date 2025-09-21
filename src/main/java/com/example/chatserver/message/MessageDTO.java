@@ -1,14 +1,18 @@
 package com.example.chatserver.message;
 
-import org.springframework.stereotype.Component;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MessageDTO {
 
     private Long messageId;
-    private Long senderID;
+    private String sendername;
     private Long receiverID;
     private String content;
     private long timestamp;

@@ -9,16 +9,9 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface MessageMapper {
 
-//    @Mapping(source = "sender.userId", target = "senderID")
-//    @Mapping(source = "receiver.userId", target = "receiverID")
-//    @Mapping(source = "chatRoom.chatroomId", target = "chatRoomID")
-//    @Mapping(source = "replyToMessage.messageId", target = "replyToMessageId")
-    MessageDTO toDTO(Messages message);
-
-//    @Mapping(source = "senderID", target = "sender", qualifiedByName = "idToUser")
-//    @Mapping(source = "receiverID", target = "receiver", qualifiedByName = "idToUser")
-//    @Mapping(source = "chatRoomID", target = "chatRoom", qualifiedByName = "idToChatroom")
-//    @Mapping(source = "replyToMessageId", target = "replyToMessage", qualifiedByName = "idToMessage")
+    @Mapping(source = "receiverID", target = "receiver", qualifiedByName = "idToUser")
+    @Mapping(source = "chatRoomID", target = "chatRoom", qualifiedByName = "idToChatroom")
+    @Mapping(source = "replyToMessageId", target = "replyToMessage", qualifiedByName = "idToMessage")
     Messages toEntity(MessageDTO dto);
 
     // Mapping ID -> entity

@@ -31,10 +31,17 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ApiResponse login(@RequestBody Authentication authentication) {
-        // Logic to create a user
         log.debug("[UserController] Password from request: " + authentication.getPassword());
-        return new ApiResponse("success","User logged in successfully", authenticationService.Login(authentication));
+        try {
+            // Gọi service để login
+            var authResponse = authenticationService.Login(authentication);
+            return new ApiResponse("success", "User logged in successfully", authResponse);
+        } catch (RuntimeException e) {
+            // Khi password sai hoặc user không tồn tại
+            return new ApiResponse("error", "Authentication failed", e.getMessage());
+        }
     }
+
 
     @PostMapping("/introspect")
     public ApiResponse introspect(HttpServletRequest request) {
@@ -53,4 +60,6 @@ public class AuthenticationController {
         }
         return new ApiResponse("success", "Token introspected successfully", sub);
     }
+
+
 }

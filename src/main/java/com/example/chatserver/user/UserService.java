@@ -78,5 +78,27 @@ public class UserService {
                 ).verify(existingUser.getVerify())
                 .build();
     }
+
+    public boolean changePassword(String sub, String oldPassword, String newPassword) {
+        User existingUser = userRepository.findByUsername(sub);
+        if (existingUser == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        if (!passwordEncoder.matches(oldPassword, existingUser.getPassword())) {
+            log.debug("[UserService] Old password does not match for user: " + sub);
+            return false; // Old password does not match
+        }
+
+        if (newPassword == null || newPassword.isEmpty()) {
+            log.debug("[UserService] New password is null or empty for user: " + sub);
+            throw new RuntimeException("New password cannot be empty");
+        }
+
+        existingUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(existingUser);
+        return true;
+    }
 }
 
