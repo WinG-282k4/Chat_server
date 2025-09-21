@@ -1,9 +1,6 @@
 package com.example.chatserver.authentication;
 
-import com.example.chatserver.user.User;
-import com.example.chatserver.user.UserDTO;
-import com.example.chatserver.user.UserRepository;
-import com.example.chatserver.user.UserService;
+import com.example.chatserver.user.*;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -11,6 +8,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,10 +21,39 @@ import java.util.Date;
 public class AuthenticationService {
     private static final Log log = LogFactory.getLog(AuthenticationService.class);
 
-    protected static final String SIGNER_KEY = "poLBWPgVQou48bsluXo1KZxpjR+eCY7PsXisVtfkqu+7Z6qWeRazpVPrU4Uf8i9s";
+    @Value("${jwt.signer-key}")
+    private String SIGNER_KEY;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    public UserDTO createUser(Authentication authentication) {
+        //Check if user already exists
+        if(userRepository.existsByUsername(authentication.getUsername())) {
+            throw new RuntimeException("User already exists");
+        }
+
+        if (authentication.getPassword() == null || authentication.getPassword().isEmpty()) {
+            System.out.println("[UserService] Password is null or empty: '" + authentication.getPassword() + "'");
+            throw new RuntimeException("Password cannot be empty");
+        }
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        String hashedPassword = passwordEncoder.encode(authentication.getPassword());
+
+        User user = new User();
+        user.setUsername(authentication.getUsername());
+        user.setPassword(hashedPassword);
+
+        userRepository.save(user);
+        return UserDTO.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .build();
+    }
 
     public AuthenticationResponse Login(Authentication authentication) {
         //Check if user already exists
@@ -54,21 +81,15 @@ public class AuthenticationService {
     }
 
     public String genToken(String username) {
-
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
-
-        JWTClaimsSet ClaimsSet = new JWTClaimsSet.Builder()
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(username)
                 .issuer("SKWinG")
                 .issueTime(new Date())
-                .expirationTime(new Date(
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
-                ))
+                .expirationTime(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
                 .build();
-        Payload payload = new Payload(ClaimsSet.toJSONObject());
-
+        Payload payload = new Payload(claimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(jwsHeader, payload);
-
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();

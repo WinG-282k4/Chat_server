@@ -1,66 +1,114 @@
-//package com.example.chatserver.security;
-//
-//import com.nimbusds.jose.JOSEException;
-//import com.nimbusds.jose.JWSObject;
-//import com.nimbusds.jose.crypto.MACVerifier;
-//import jakarta.servlet.FilterChain;
-//import jakarta.servlet.ServletException;
-//import jakarta.servlet.http.HttpServletRequest;
-//import jakarta.servlet.http.HttpServletResponse;
-//import lombok.Data;
-//import org.springframework.stereotype.Component;
-//import org.springframework.web.filter.OncePerRequestFilter;
-//
-//import java.io.IOException;
-//import java.nio.charset.StandardCharsets;
-//import java.text.ParseException;
-//import java.util.Date;
-//
-//@Component
-//public class JwtAuthenticationFilter extends OncePerRequestFilter {
-//
-//    private static final String SIGNER_KEY = "poLBWPgVQou48bsluXo1KZxpjR+eCY7PsXisVtfkqu+7Z6qWeRazpVPrU4Uf8i9s";
-//
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request,
-//                                    HttpServletResponse response,
-//                                    FilterChain filterChain) throws ServletException, IOException {
-//        String authHeader = request.getHeader("Authorization");
-//
-//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-//            String token = authHeader.substring(7);
-//
-//            try {
-//                JWSObject jwsObject = JWSObject.parse(token);
-//
-//                // Kiểm tra thời gian hết hạn ở đây nếu cần thiết
-//                Date expirationTime = jwsObject.getPayload().toJSONObject().get("exp") != null ?
-//                        new Date(((Number) jwsObject.getPayload().toJSONObject().get("exp")).longValue() * 1000) : null;
-//
-//                boolean verified = jwsObject.verify(new MACVerifier(SIGNER_KEY.getBytes(StandardCharsets.UTF_8))) &&
-//                                   (expirationTime == null || expirationTime.after(new Date()));;
-//                if (!verified) {
-//                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                    response.getWriter().write("Invalid JWT signature");
-//                    return;
-//                }
-//
-//                // Lấy payload JSON
-//                String payload = jwsObject.getPayload().toString();
-//                request.setAttribute("jwtPayload", payload);
-//
-//            } catch (ParseException | JOSEException e) {
-//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                response.getWriter().write("Invalid JWT token");
-//                return;
-//            }
-//        } else {
-//            // Nếu endpoint cần token mà không có, có thể bỏ qua nếu endpoint public
-//            // response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//            // response.getWriter().write("Missing Authorization header");
-//            // return;
-//        }
-//
-//        filterChain.doFilter(request, response);
-//    }
-//}
+package com.example.chatserver.security;
+
+import com.example.chatserver.authentication.IntrospectResponse;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.MACVerifier;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.util.Collections;
+import java.util.Date;
+
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    @Value("${jwt.signer-key}")
+    private String SIGNER_KEY;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        System.out.println("INCOMING REQUEST: " + request.getMethod() + " " + request.getRequestURI());
+        String authHeader = request.getHeader("Authorization");
+//        System.out.println("Authorization header: " + authHeader); // Log header
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7); // Remove 'Bearer '
+        }
+        System.out.println("Extracted token: " + token); // Log token
+
+        if (token == null || !introspectToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid JWT token");
+            return;
+        }
+
+        JWSObject jwsObject = null;
+        try {
+            jwsObject = JWSObject.parse(token);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Lấy payload JSON
+        String payload = jwsObject.getPayload().toString();
+        request.setAttribute("jwtPayload", payload);
+
+        // Set SecurityContext để Spring Security nhận diện đã xác thực
+        String username = (String) jwsObject.getPayload().toJSONObject().get("sub");
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                username,
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("USER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        //Chuyển tiếp nếu xác thực thành công
+        filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+
+        // Danh sách endpoint public (permitAll)
+        return path.equals("/api/auth/login")
+                || path.equals("/api/auth/register")
+                || path.equals("/api/auth/forgot-password"); // thêm nếu có
+    }
+
+
+    public boolean introspectToken(String token) {
+        try {
+            // Cắt "Bearer " nếu token truyền từ header
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            JWSObject jwsObject = JWSObject.parse(token);
+            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+            Object expObj = jwsObject.getPayload().toJSONObject().get("exp");
+            Date expTime = new Date(0);
+            if (expObj instanceof Number) {
+                long expSeconds = ((Number) expObj).longValue();
+                expTime = new Date(expSeconds * 1000);
+            }
+
+//            System.out.println("expTime: " + expTime);
+//            System.out.println("now: " + new Date());
+//            System.out.println("verify: " + jwsObject.verify(verifier));
+
+            return jwsObject.verify(verifier) && expTime.after(new Date());
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid token", e);
+        }
+    }
+
+}

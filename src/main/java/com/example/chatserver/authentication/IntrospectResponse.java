@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class IntrospectResponse {
     private Boolean active;
+    private String username;
 }
