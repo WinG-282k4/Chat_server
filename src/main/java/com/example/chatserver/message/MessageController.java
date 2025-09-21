@@ -53,6 +53,41 @@ public class MessageController {
     // POST tạo message mới
     @PostMapping
     public ApiResponse createMessage(HttpServletRequest request, @RequestBody MessageDTO message) {
+        String sub = getSubFromRequest(request);
+        message.setSendername(sub);
+        System.out.println("message from request: " + message);
+        return new ApiResponse("success", "Create message success", messageService.CreateMessage(message));
+    }
+
+    // PUT cập nhật message theo ID
+    @PutMapping("/{id}") // ID của message cần cập nhật
+    public ApiResponse updateMessage(
+            HttpServletRequest request,
+            @PathVariable Long id,
+            @RequestBody MessageDTO newMessage
+    ) {
+        String sub = getSubFromRequest(request);
+        newMessage.setSendername(sub);
+        newMessage.setMessageId(id);
+        System.out.println("message from request: " + newMessage);
+        try {
+            MessageDTO updatedMessage = messageService.updateMessage(newMessage);
+            return new ApiResponse("success", "Update message success", updatedMessage);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+//            return new ApiResponse("error", "Update message failed", e.getMessage());
+        }
+    }
+
+    // DELETE message theo ID
+    @DeleteMapping("/{id}")
+    public ApiResponse deleteMessage(@PathVariable Long id) {
+        messageRepo.deleteById(id);
+        return new ApiResponse("success", "Delete message success", null);
+    }
+
+    private String getSubFromRequest(HttpServletRequest request) {
+        System.out.println("START getSubFromRequest");
         String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
         String sub = null;
         if (payload != null) {
@@ -67,27 +102,9 @@ public class MessageController {
                 }
                 System.out.println("Extracted sub: " + sub);
             } catch (Exception e) {
-                return new ApiResponse("error", "Invalid payload format", null);
+                return null;
             }
         }
-        message.setSendername(sub);
-        System.out.println("message from request: " + message);
-        return new ApiResponse("success", "Create message success", messageService.CreateMessage(message));
-    }
-
-    // PUT cập nhật message theo ID
-    @PutMapping("/{id}")
-    public ApiResponse updateMessage(
-            @PathVariable Long id,
-            @RequestBody MessageDTO newMessage
-    ) {
-        return null;
-    }
-
-    // DELETE message theo ID
-    @DeleteMapping("/{id}")
-    public ApiResponse deleteMessage(@PathVariable Long id) {
-        messageRepo.deleteById(id);
-        return new ApiResponse("success", "Delete message success", null);
+        return sub;
     }
 }

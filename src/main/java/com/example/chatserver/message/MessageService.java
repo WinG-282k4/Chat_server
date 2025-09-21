@@ -28,6 +28,7 @@ public class MessageService {
         return messageRepository.save(msg);
     }
 
+    @Transactional
     public MessageDTO CreateMessage(MessageDTO message) {
 
         User sender = userRepository.findByUsername(message.getSendername());
@@ -38,6 +39,7 @@ public class MessageService {
         msg = save(msg);
 
         return MessageDTO.builder()
+                .messageId(msg.getMessageId())
                 .sendername(msg.getSender().getName())
                 .content(msg.getContent())
                 .receiverID(msg.getChatRoom() == null && msg.getReceiver() != null ? msg.getReceiver().getUserId() : null)
@@ -48,7 +50,38 @@ public class MessageService {
                 .build();
     }
 
-    // Other business logic methods can be added here
+    @Transactional
+    public MessageDTO updateMessage(MessageDTO newMessage) {
+        Messages existingMessage = messageRepository.findById(newMessage.getMessageId())
+                .orElseThrow(() -> new RuntimeException("Message not found"));
 
+        // Check sender
+        if (newMessage.getSendername() == null ||
+                !newMessage.getSendername().equals(existingMessage.getSender().getUsername())) {
+            throw new RuntimeException("You are not the sender of this message");
+        }
+
+        // Update fields
+        if (newMessage.getContent() != null) {
+            existingMessage.setContent(newMessage.getContent());
+        }
+
+        // Save changes
+        Messages updatedMessage = save(existingMessage);
+
+        // Convert to DTO
+        return MessageDTO.builder()
+                .messageId(updatedMessage.getMessageId())
+                .sendername(updatedMessage.getSender().getName())
+                .content(updatedMessage.getContent())
+                .receiverID(updatedMessage.getChatRoom() == null && updatedMessage.getReceiver() != null
+                        ? updatedMessage.getReceiver().getUserId() : null)
+                .chatRoomID(updatedMessage.getChatRoom() != null
+                        ? updatedMessage.getChatRoom().getChatroomId() : null)
+                .timestamp(updatedMessage.getTimestamp())
+                .type(updatedMessage.getType())
+                .status(updatedMessage.getStatus())
+                .build();
+    }
 
 }
