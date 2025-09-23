@@ -1,5 +1,7 @@
 package com.example.chatserver.authentication;
 
+import com.example.chatserver.invalidJWT.InvalidToken;
+import com.example.chatserver.invalidJWT.InvalidTokenRspository;
 import com.example.chatserver.user.*;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class AuthenticationService {
@@ -29,6 +32,9 @@ public class AuthenticationService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private InvalidTokenRspository invalidTokenRspository;
 
     public UserDTO createUser(Authentication authentication) {
         //Check if user already exists
@@ -66,7 +72,8 @@ public class AuthenticationService {
             throw new RuntimeException("Password cannot be empty");
         }
 
-        User user = userRepository.findByUsername(authentication.getUsername());
+        User user = userRepository.findByUsername(authentication.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         if(passwordEncoder.matches(authentication.getPassword(), user.getPassword())) {
             var token = genToken(authentication.getUsername());
@@ -80,6 +87,7 @@ public class AuthenticationService {
         }
     }
 
+    //Hàm tạo token
     public String genToken(String username) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -87,6 +95,7 @@ public class AuthenticationService {
                 .issuer("SKWinG")
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
+                .jwtID(UUID.randomUUID().toString())
                 .build();
         Payload payload = new Payload(claimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(jwsHeader, payload);
@@ -112,6 +121,18 @@ public class AuthenticationService {
         } catch (Exception e) {
             log.error("[UserService] Error while introspecting token: " + e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+
+    public void logout(String jti, Long exp) {
+        // Invalidate the token by storing its jti in a blacklist (not implemented here)
+        System.out.println("[AuthenticationService] Logging out token with jti: " + jti + " and exp: " + exp);
+        // You can implement a token blacklist using a database or in-memory store like Redis
+        try {        // giây
+            Instant expInstant = Instant.ofEpochSecond(exp);
+            invalidTokenRspository.save(new InvalidToken(jti, expInstant));
+        } catch (NumberFormatException e) {
+            log.error("[AuthenticationService] Invalid exp format: " + exp);
         }
     }
 }

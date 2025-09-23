@@ -30,25 +30,29 @@ public class UserController {
 //                .toList();
 //    }
 
+    @GetMapping("/myinfo")
+    public ApiResponse getUsers(HttpServletRequest request) {
+        String sub = getSubFromRequest(request);
+
+        User user = Repository.findByUsername(sub)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Dùng builder để tạo UserDTO
+        UserDTO userDTO = UserDTO.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .password("******")   // ⚠️ thường không nên trả về password trong API
+                .email(user.getEmail())
+                .verify(user.getVerify())
+                .build();
+
+        return new ApiResponse("success", "Fetched users successfully", userDTO);
+    }
+
     @PostMapping("/update")
     public ApiResponse updateUser(HttpServletRequest request, @RequestBody UserDTO userDTO) {
-        String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
-        String sub = null;
-        if (payload != null) {
-            try {
-                // Extract 'sub' from payload
-                String[] parts = payload.split(",");
-                for (String part : parts) {
-                    if (part.contains("\"sub\"")) {
-                        sub = part.split(":")[1].replaceAll("[\"}]", "").trim();
-                        break;
-                    }
-                }
-                System.out.println("Extracted sub: " + sub);
-            } catch (Exception e) {
-                return new ApiResponse("error", "Invalid payload format", null);
-            }
-        }
+        String sub = getSubFromRequest(request);
         userDTO.setUsername(sub);
         UserDTO updatedUser = userService.updateUser(userDTO);
 //        System.out.println(updatedUser);
@@ -80,5 +84,27 @@ public class UserController {
         } else {
             return new ApiResponse("error", "Failed to change password", null);
         }
+    }
+
+    private String getSubFromRequest(HttpServletRequest request) {
+        System.out.println("START getSubFromRequest");
+        String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
+        String sub = null;
+        if (payload != null) {
+            try {
+                // Extract 'sub' from payload
+                String[] parts = payload.split(",");
+                for (String part : parts) {
+                    if (part.contains("\"sub\"")) {
+                        sub = part.split(":")[1].replaceAll("[\"}]", "").trim();
+                        break;
+                    }
+                }
+                System.out.println("Extracted sub: " + sub);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return sub;
     }
 }

@@ -2,6 +2,7 @@ package com.example.chatserver.authentication;
 
 import com.example.chatserver.common.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.Payload;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +41,20 @@ public class AuthenticationController {
             // Khi password sai hoặc user không tồn tại
             return new ApiResponse("error", "Authentication failed", e.getMessage());
         }
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse logout(HttpServletRequest request) {
+        // Logic to handle user logout
+        // Get jti from request attribute set by JwtFilter
+        String Spayload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
+        Payload jwtPayload = new Payload(Spayload);
+        String jti = jwtPayload.toJSONObject().get("jti").toString();
+        Long exp = jwtPayload.toJSONObject().get("exp") != null ? Long.parseLong(jwtPayload.toJSONObject().get("exp").toString()) : null;
+        if (jti != null && exp != null) {
+            authenticationService.logout(jti, exp);
+        }
+        return new ApiResponse("success", "User logged out successfully", null);
     }
 
 

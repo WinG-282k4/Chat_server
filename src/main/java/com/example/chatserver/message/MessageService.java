@@ -5,6 +5,7 @@ import com.example.chatserver.user.UserRepository;
 import com.example.chatserver.user.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +32,8 @@ public class MessageService {
     @Transactional
     public MessageDTO CreateMessage(MessageDTO message) {
 
-        User sender = userRepository.findByUsername(message.getSendername());
+        User sender = userRepository.findByUsername(message.getSendername())
+                .orElseThrow(() -> new UsernameNotFoundException("Sender not found"));
         Messages msg = messageConvecter.toEntity(message);
         msg.setSender(sender);
         msg.setStatus("SENT");

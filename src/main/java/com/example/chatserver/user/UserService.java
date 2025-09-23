@@ -50,7 +50,8 @@ public class UserService {
     }
 
     public UserDTO updateUser(UserDTO userDTO) {
-        User existingUser = userRepository.findByUsername(userDTO.getUsername());
+        User existingUser = userRepository.findByUsername(userDTO.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         if (existingUser == null) {
             throw new RuntimeException("User not found");
         }
@@ -80,7 +81,8 @@ public class UserService {
     }
 
     public boolean changePassword(String sub, String oldPassword, String newPassword) {
-        User existingUser = userRepository.findByUsername(sub);
+        User existingUser = userRepository.findByUsername(sub)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         if (existingUser == null) {
             throw new RuntimeException("User not found");
         }

@@ -1,6 +1,7 @@
 package com.example.chatserver.security;
 
 import com.example.chatserver.authentication.IntrospectResponse;
+import com.example.chatserver.invalidJWT.InvalidTokenRspository;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
@@ -10,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -30,6 +32,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${jwt.signer-key}")
     private String SIGNER_KEY;
 
+    @Autowired
+    private InvalidTokenRspository invalidTokenRspository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -41,19 +46,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // Remove 'Bearer '
         }
-        System.out.println("Extracted token: " + token); // Log token
-
-        if (token == null || !introspectToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid JWT token");
-            return;
-        }
+//        System.out.println("Extracted token: " + token); // Log token
 
         JWSObject jwsObject = null;
         try {
             jwsObject = JWSObject.parse(token);
         } catch (ParseException e) {
             throw new RuntimeException(e);
+        }
+
+        //Kiểm tra token có bị thu hồi không
+        String jti = (String) jwsObject.getPayload().toJSONObject().get("jti");
+        if (invalidTokenRspository.existsById(jti)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("JWT token has been revoked");
+            return;
+        }
+
+        if (token == null || !introspectToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid JWT token");
+            return;
         }
 
         // Lấy payload JSON
