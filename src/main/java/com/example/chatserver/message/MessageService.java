@@ -44,8 +44,8 @@ public class MessageService {
                 .messageId(msg.getMessageId())
                 .sendername(msg.getSender().getName())
                 .content(msg.getContent())
-                .receiverID(msg.getChatRoom() == null && msg.getReceiver() != null ? msg.getReceiver().getUserId() : null)
-                .chatRoomID(msg.getChatRoom() != null ? msg.getChatRoom().getChatroomId() : null)
+                .receiverId(msg.getChatRoom() == null && msg.getReceiver() != null ? msg.getReceiver().getUserId() : null)
+                .chatRoomId(msg.getChatRoom() != null ? msg.getChatRoom().getChatroomId() : null)
                 .timestamp(msg.getTimestamp())
                 .type(msg.getType())
                 .status(msg.getStatus())
@@ -76,9 +76,9 @@ public class MessageService {
                 .messageId(updatedMessage.getMessageId())
                 .sendername(updatedMessage.getSender().getName())
                 .content(updatedMessage.getContent())
-                .receiverID(updatedMessage.getChatRoom() == null && updatedMessage.getReceiver() != null
+                .receiverId(updatedMessage.getChatRoom() == null && updatedMessage.getReceiver() != null
                         ? updatedMessage.getReceiver().getUserId() : null)
-                .chatRoomID(updatedMessage.getChatRoom() != null
+                .chatRoomId(updatedMessage.getChatRoom() != null
                         ? updatedMessage.getChatRoom().getChatroomId() : null)
                 .timestamp(updatedMessage.getTimestamp())
                 .type(updatedMessage.getType())

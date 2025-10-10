@@ -13,10 +13,10 @@ public class MessageDTO {
 
     private Long messageId;
     private String sendername;
-    private Long receiverID;
+    private Long receiverId;
     private String content;
     private long timestamp;
-    private Long chatRoomID;
+    private Long chatRoomId;
     private String type;
     private String status;
     private Long replyToMessageId;

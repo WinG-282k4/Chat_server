@@ -50,7 +50,4 @@ public class Messages {
 
     private long likeCount;
 
-    public Messages(Long id) {
-        this.messageId = id;
-    }
 }

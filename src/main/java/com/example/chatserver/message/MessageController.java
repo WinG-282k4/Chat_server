@@ -8,6 +8,9 @@ import com.example.chatserver.security.UserPrincipal;
 import com.example.chatserver.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,17 +50,30 @@ public class MessageController {
 
     // GET message theo ID
     @GetMapping("/{id}")
-    public ApiResponse getMessage(@PathVariable Long id) {
+    public ApiResponse getMessage(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal user
+    ) {
         return null;
     }
 
 
     // POST tạo message mới
-    @PostMapping
-    public ApiResponse createMessage(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody MessageDTO message) {
-        message.setSendername(userPrincipal.getUsername());
-        System.out.println("message from request: " + message);
-        return new ApiResponse("success", "Create message success", messageService.CreateMessage(message));
+    @MessageMapping("/chat.sendMessage") // Lắng nghe trên destination WebSocket
+    @SendTo("/topic/public") // Gửi kết quả đến topic này
+    public MessageDTO sendMessage(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Payload MessageDTO chatMessage
+    ) {
+        // 1. Lấy thông tin người gửi từ principal đã được xác thực
+        chatMessage.setSendername(userPrincipal.getUsername());
+
+        // 2. Gọi service để LƯU tin nhắn vào database
+        // Phương thức CreateMessage sẽ trả về tin nhắn đã được lưu (có thể có thêm id, timestamp...)
+        MessageDTO savedMessage = messageService.CreateMessage(chatMessage);
+
+        // 3. Return tin nhắn đã lưu. @SendTo sẽ lấy tin nhắn này và phát cho mọi người
+        return savedMessage;
     }
 
     // PUT cập nhật message theo ID
