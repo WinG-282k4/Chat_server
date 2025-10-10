@@ -1,13 +1,13 @@
 package com.example.chatserver.user;
 
 import com.example.chatserver.common.ApiResponse;
+import com.example.chatserver.security.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,10 +31,9 @@ public class UserController {
 //    }
 
     @GetMapping("/myinfo")
-    public ApiResponse getUsers(HttpServletRequest request) {
-        String sub = getSubFromRequest(request);
+    public ApiResponse getUsers(@AuthenticationPrincipal UserPrincipal userPrincipal) {
 
-        User user = Repository.findByUsername(sub)
+        User user = Repository.findByUsername(userPrincipal.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Dùng builder để tạo UserDTO
@@ -51,33 +50,17 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    public ApiResponse updateUser(HttpServletRequest request, @RequestBody UserDTO userDTO) {
-        String sub = getSubFromRequest(request);
-        userDTO.setUsername(sub);
+    public ApiResponse updateUser(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody UserDTO userDTO) {
+        userDTO.setUsername(userPrincipal.getUsername());
         UserDTO updatedUser = userService.updateUser(userDTO);
 //        System.out.println(updatedUser);
         return new ApiResponse("success", "User updated successfully", updatedUser);
     }
 
     @PostMapping("change-password")
-    public ApiResponse changePassword(HttpServletRequest request, @RequestBody ChangePasswordRequest changePasswordRequest) {
-        String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
-        String sub = null;
-        if (payload != null) {
-            try {
-                // Extract 'sub' from payload
-                String[] parts = payload.split(",");
-                for (String part : parts) {
-                    if (part.contains("\"sub\"")) {
-                        sub = part.split(":")[1].replaceAll("[\"}]", "").trim();
-                        break;
-                    }
-                }
-                System.out.println("Extracted sub: " + sub);
-            } catch (Exception e) {
-                return new ApiResponse("error", "Invalid payload format", null);
-            }
-        }
+    public ApiResponse changePassword(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody ChangePasswordRequest changePasswordRequest) {
+
+        String sub = userPrincipal.getUsername();
         boolean result = userService.changePassword(sub, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
         if (result) {
             return new ApiResponse("success", "Password changed successfully", null);
@@ -86,25 +69,4 @@ public class UserController {
         }
     }
 
-    private String getSubFromRequest(HttpServletRequest request) {
-        System.out.println("START getSubFromRequest");
-        String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
-        String sub = null;
-        if (payload != null) {
-            try {
-                // Extract 'sub' from payload
-                String[] parts = payload.split(",");
-                for (String part : parts) {
-                    if (part.contains("\"sub\"")) {
-                        sub = part.split(":")[1].replaceAll("[\"}]", "").trim();
-                        break;
-                    }
-                }
-                System.out.println("Extracted sub: " + sub);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return sub;
-    }
 }

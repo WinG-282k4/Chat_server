@@ -86,4 +86,7 @@ public class MessageService {
                 .build();
     }
 
+    public void DeleteMessage(Long id, String username) {
+
+    }
 }

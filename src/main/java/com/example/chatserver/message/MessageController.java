@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import com.example.chatserver.common.ApiResponse;
+import com.example.chatserver.security.UserPrincipal;
 import com.example.chatserver.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -52,9 +54,8 @@ public class MessageController {
 
     // POST tạo message mới
     @PostMapping
-    public ApiResponse createMessage(HttpServletRequest request, @RequestBody MessageDTO message) {
-        String sub = getSubFromRequest(request);
-        message.setSendername(sub);
+    public ApiResponse createMessage(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody MessageDTO message) {
+        message.setSendername(userPrincipal.getUsername());
         System.out.println("message from request: " + message);
         return new ApiResponse("success", "Create message success", messageService.CreateMessage(message));
     }
@@ -62,12 +63,11 @@ public class MessageController {
     // PUT cập nhật message theo ID
     @PutMapping("/{id}") // ID của message cần cập nhật
     public ApiResponse updateMessage(
-            HttpServletRequest request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long id,
             @RequestBody MessageDTO newMessage
     ) {
-        String sub = getSubFromRequest(request);
-        newMessage.setSendername(sub);
+        newMessage.setSendername(userPrincipal.getUsername());
         newMessage.setMessageId(id);
         System.out.println("message from request: " + newMessage);
         try {
@@ -81,30 +81,12 @@ public class MessageController {
 
     // DELETE message theo ID
     @DeleteMapping("/{id}")
-    public ApiResponse deleteMessage(@PathVariable Long id) {
-        messageRepo.deleteById(id);
+    public ApiResponse deleteMessage(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable Long id
+    ) {
+        messageService.DeleteMessage(id, userPrincipal.getUsername());
         return new ApiResponse("success", "Delete message success", null);
     }
 
-    private String getSubFromRequest(HttpServletRequest request) {
-        System.out.println("START getSubFromRequest");
-        String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
-        String sub = null;
-        if (payload != null) {
-            try {
-                // Extract 'sub' from payload
-                String[] parts = payload.split(",");
-                for (String part : parts) {
-                    if (part.contains("\"sub\"")) {
-                        sub = part.split(":")[1].replaceAll("[\"}]", "").trim();
-                        break;
-                    }
-                }
-                System.out.println("Extracted sub: " + sub);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return sub;
-    }
 }

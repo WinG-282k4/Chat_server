@@ -69,14 +69,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Lấy payload JSON
-        String payload = jwsObject.getPayload().toString();
-        request.setAttribute("jwtPayload", payload);
-
         // Set SecurityContext để Spring Security nhận diện đã xác thực
         String username = (String) jwsObject.getPayload().toJSONObject().get("sub");
+        UserPrincipal userPrincipal = new UserPrincipal(username);
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                username,
+                userPrincipal,
                 null,
                 Collections.singletonList(new SimpleGrantedAuthority("USER"))
         );
