@@ -41,8 +41,8 @@ function onConnected() {
     // Subscribe to users topic (backend should send to /topic/users)
     stompClient.subscribe('/topic/users', onMessageReceived);
 
-    // Notify backend user connected (align with @MessageMapping("/user.addUser"))
-    stompClient.send('/app/user.addUser', {});
+    // Notify backend user connected (align with @MessageMapping("/user.connect"))
+    stompClient.send('/app/user.connect', {});
 
     document.querySelector('#connected-user-fullname').textContent = name;
     findAndDisplayConnectedUsers().then();

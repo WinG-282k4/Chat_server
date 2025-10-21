@@ -5,13 +5,17 @@ import com.example.chatserver.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -63,14 +67,28 @@ public class MessageController {
     @MessageMapping("/chat") // Lắng nghe trên destination WebSocket
     public void sendMessage(
 //            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            Principal principal,
             @Payload MessageDTO chatMessage
     ) {
+
+        //Get authentication from principal
+//        AuthenticationPrincipal auth = (AuthenticationPrincipal) principal;
+        UserPrincipal user = (UserPrincipal) principal;
+        chatMessage.setSenderId(userService.getUserIdByUsername(user.getUsername()));
         MessageDTO newmessage = messageService.CreateMessage(chatMessage);
         messagingTemplate.convertAndSendToUser(
                 newmessage.getReceiverId().toString(),"/queue/messages",
                 newmessage.getContent()
         );
 
+    }
+
+    @MessageExceptionHandler
+    @SendToUser("/queue/errors") // Gửi tin nhắn lỗi CHỈ cho người dùng đã gửi
+    public String handleException(MethodArgumentNotValidException exception) {
+
+        // Trả về một tin nhắn lỗi thân thiện cho client
+        return "Lỗi: Nội dung tin nhắn không hợp lệ hoặc bị rỗng.";
     }
 
     // PUT cập nhật message theo ID

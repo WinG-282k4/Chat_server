@@ -6,12 +6,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +45,12 @@ public class UserController {
     @MessageMapping("/user.connect")
     @SendTo("users/topic")
     public UserDTO connect(
-            @AuthenticationPrincipal UserPrincipal user
+//            @AuthenticationPrincipal UserPrincipal user
+            Principal principal
     ) {
+        //Get userPrincipal from principal
+        Authentication auth = (Authentication) principal;
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
         UserDTO ConnectUser = userService.connect(user.getUsername());
         return ConnectUser;
     }
@@ -51,9 +59,12 @@ public class UserController {
     @MessageMapping("/user.disconnectUser")
     @SendTo("users/topic")
     public UserDTO disconnectUser(
-            @AuthenticationPrincipal UserPrincipal user
+//            @AuthenticationPrincipal UserPrincipal user
+            Principal principal
     ) {
-
+        //Get userPrincipal from principal
+        Authentication auth = (Authentication) principal;
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
         UserDTO Duser = userService.disconnect(user.getUsername());
         return UserDTO.builder()
                 .userId(Duser.getUserId())
@@ -68,6 +79,14 @@ public class UserController {
                 .map(userMapper::toDto)
                 .toList();
         return ResponseEntity.ok(userDTOs);
+    }
+
+    @MessageExceptionHandler
+    @SendToUser("/queue/errors") // Gửi tin nhắn lỗi CHỈ cho người dùng đã gửi
+    public String handleException(MethodArgumentNotValidException exception) {
+
+        // Trả về một tin nhắn lỗi thân thiện cho client
+        return "Lỗi: Nội dung tin nhắn không hợp lệ hoặc bị rỗng.";
     }
 
     @GetMapping("/myinfo")
