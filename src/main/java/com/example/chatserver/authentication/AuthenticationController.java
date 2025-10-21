@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,10 +25,10 @@ public class AuthenticationController {
     private  AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ApiResponse register(@RequestBody Authentication authentication) {
+    public ResponseEntity register(@RequestBody Authentication authentication) {
         // Logic to create a user
         log.debug("[UserController] Password from request: " + authentication.getPassword());
-        return new ApiResponse("success","User created successfully", authenticationService.createUser(authentication));
+        return ResponseEntity.ok(authenticationService.createUser(authentication));
     }
 
     @PostMapping("/login")

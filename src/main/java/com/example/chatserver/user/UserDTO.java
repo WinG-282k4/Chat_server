@@ -14,9 +14,15 @@ public class UserDTO {
     private Long userId;
     private String username;
     private String name;
+
+    // chỉ cho phép client gửi password mà server không serialize trả về
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
     private String email;
     private Boolean verify;
+
+    private Status status;
 }
 
 

@@ -22,6 +22,9 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
+                        // === THÊM CÁC DÒNG CHO PHÉP FILE TĨNH Ở ĐÂY ===
+                        .requestMatchers("/", "/index.html", "/test-websocket.html", "/*.js", "/*.css").permitAll()
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/auth/introspect").authenticated()
                         .anyRequest().authenticated()

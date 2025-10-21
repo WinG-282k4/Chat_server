@@ -2,26 +2,34 @@ package com.example.chatserver.user;
 
 import com.example.chatserver.common.ApiResponse;
 import com.example.chatserver.security.UserPrincipal;
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private static final Log log = LogFactory.getLog(UserController.class);
     @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @Autowired
-    private UserRepository Repository;
+    private final UserRepository Repository;
 
     @Autowired
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
 //    @GetMapping
 //    public List<UserDTO> getUsers() {
@@ -29,6 +37,43 @@ public class UserController {
 //                .map(userMapper::toDto)
 //                .toList();
 //    }
+
+    // Thêm user mới qua WebSocket khi user kết nối
+    @MessageMapping("/user.addUser")
+    @SendTo("users/topic")
+    public UserDTO addUser(
+            @Payload UserDTO user
+    ) {
+        User Euser = userMapper.toEntity(user);
+        userService.connect(Euser);
+        return UserDTO.builder()
+                .userId(Euser.getUserId())
+                .name(Euser.getName())
+                .build();
+    }
+
+    //Disconnect user khi user ngắt kết nối
+    @MessageMapping("/user.disconnectUser")
+    @SendTo("users/topic")
+    public UserDTO disconnectUser(
+            @Payload UserDTO user
+    ) {
+        User Euser = userMapper.toEntity(user);
+        userService.disconnect(Euser);
+        return UserDTO.builder()
+                .userId(Euser.getUserId())
+                .name(Euser.getName())
+                .build();
+    }
+
+    @GetMapping("user")
+    public ResponseEntity<List<UserDTO>> findConnectedUsers() {
+        List<User> connectedUsers = userService.findConnectedUsers();
+        List<UserDTO> userDTOs = connectedUsers.stream()
+                .map(userMapper::toDto)
+                .toList();
+        return ResponseEntity.ok(userDTOs);
+    }
 
     @GetMapping("/myinfo")
     public ApiResponse getUsers(@AuthenticationPrincipal UserPrincipal userPrincipal) {

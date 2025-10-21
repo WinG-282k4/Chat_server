@@ -1,22 +1,27 @@
 package com.example.chatserver.user;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
-@Component
+@Service
+@RequiredArgsConstructor
 public class UserService {
 
     private static final Log log = LogFactory.getLog(UserService.class);
     @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
     // This service can be used to handle user-related business logic
     // For example, methods to create, update, delete users, etc.
 
@@ -101,6 +106,39 @@ public class UserService {
         existingUser.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(existingUser);
         return true;
+    }
+
+    public void connect(User user) {
+        // Logic to handle user connection
+        var existingUser = userRepository.findByUsername(user.getUsername())
+                .orElse(null);
+        if (existingUser != null) {
+            log.debug("[UserService] Setting user status to ONLINE for user: " + user.getUsername());
+            existingUser.setStatus(Status.ONLINE);
+            userRepository.save(existingUser);
+        } else {
+            log.debug("[UserService] User not found for connection: " + user.getUsername());
+            return;
+        }
+    }
+
+    public void disconnect(User user) {
+        // Logic to handle user disconnection
+        var existingUser = userRepository.findByUsername(user.getUsername())
+                .orElse(null);
+        if (existingUser != null) {
+            log.debug("[UserService] Setting user status to OFFLINE for user: " + user.getUsername());
+            existingUser.setStatus(Status.OFFLINE);
+            userRepository.save(existingUser);
+        } else {
+            log.debug("[UserService] User not found for disconnection: " + user.getUsername());
+            return;
+        }
+    }
+
+    public List<User> findConnectedUsers() {
+        // Logic to find connected users
+        return userRepository.findAllByStatus(Status.ONLINE);
     }
 }
 

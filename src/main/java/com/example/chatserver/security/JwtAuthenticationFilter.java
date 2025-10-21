@@ -89,6 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Danh sách endpoint public (permitAll)
         return path.equals("/api/auth/login")
+                || path.equals("/index.html")
                 || path.equals("/api/auth/register")
                 || path.equals("/api/auth/forgot-password"); // thêm nếu có
     }

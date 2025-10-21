@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor // sinh constructor tất cả tham số, bao gồm userId
 @Entity
@@ -34,4 +35,6 @@ public class User {
     @Column(name = "verify")
     private Boolean verify;
 
+    @Column(name = "status")
+    private Status status;
 }

@@ -14,82 +14,32 @@ import java.util.List;
 
 @Component
 @Mapper(componentModel = "spring")
-public abstract class MessageMapper {
+public interface MessageMapper {
+    @Mapping(source = "chatroomId", target = "chatroom", qualifiedByName = "mapChatroomById")
+    @Mapping(source = "senderId", target = "sender", qualifiedByName = "mapUserById")
+    Messages toEntity(MessageDTO dto);
 
-    // --- Dependency Injection ---
-    // Sử dụng constructor injection (cách làm tốt nhất)
-    // để inject các repository cần thiết cho việc chuyển đổi.
-    protected UserRepository userRepository;
-    protected ChatroomRepository chatroomRepository;
-    protected MessageRepository messageRepository;
+    @Mapping(source = "chatroom.chatroomId", target = "chatroomId")
+    @Mapping(source = "sender.userId", target = "senderId")
+    MessageDTO toDTO(Messages entity);
 
-    @Autowired
-    public void setUserRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    List<MessageDTO> toDTOs(List<Messages> entities);
+
+    @Named("mapChatroomById")
+    default Chatroom mapChatroomById(Long chatroomId) {
+        // Giả sử bạn có ChatroomRepository để tìm Chatroom theo ID
+        return chatroomRepository.findById(chatroomId).orElse(null);
+    }
+
+    @Named("mapUserById")
+    default User mapUserById(Long userId) {
+        // Giả sử bạn có UserRepository để tìm User theo ID
+        return userRepository.findById(userId).orElse(null);
     }
 
     @Autowired
-    public void setChatroomRepository(ChatroomRepository chatroomRepository) {
-        this.chatroomRepository = chatroomRepository;
-    }
+    ChatroomRepository chatroomRepository = null;
 
     @Autowired
-    public void setMessageRepository(MessageRepository messageRepository) {
-        this.messageRepository = messageRepository;
-    }
-
-    // --- Chuyển đổi từ Entity sang DTO ---
-    // Dùng để hiển thị dữ liệu ra cho client
-    @Mapping(source = "sender.username", target = "sendername") // Giả sử User entity có trường 'username'
-    @Mapping(source = "receiver.userId", target = "receiverId")
-    @Mapping(source = "chatRoom.chatroomId", target = "chatRoomId")
-    @Mapping(source = "replyToMessage.messageId", target = "replyToMessageId")
-    public abstract MessageDTO toDto(Messages entity);
-
-    public abstract List<MessageDTO> toDtoList(List<Messages> entities);
-
-    // --- Chuyển đổi từ DTO sang Entity ---
-    // Dùng khi nhận dữ liệu từ client để lưu vào database
-    @Mapping(source = "sendername", target = "sender", qualifiedByName = "usernameToUserEntity")
-    @Mapping(source = "receiverId", target = "receiver", qualifiedByName = "idToUserEntity")
-    @Mapping(source = "chatRoomId", target = "chatRoom", qualifiedByName = "idToChatroomEntity")
-    @Mapping(source = "replyToMessageId", target = "replyToMessage", qualifiedByName = "idToMessageEntity")
-    @Mapping(target = "interactions", ignore = true) // Bỏ qua trường này khi mapping từ DTO
-    public abstract Messages toEntity(MessageDTO dto);
-
-
-    // --- Các phương thức Helper (dùng bởi qualifiedByName) ---
-
-    @Named("usernameToUserEntity")
-    protected User usernameToUserEntity(String username) {
-        if (username == null) {
-            return null;
-        }
-        // Cần có phương thức findByUsername trong UserRepository
-        return userRepository.findByUsername(username).orElse(null);
-    }
-
-    @Named("idToUserEntity")
-    protected User idToUserEntity(Long id) {
-        if (id == null) {
-            return null;
-        }
-        return userRepository.getReferenceById(id);
-    }
-
-    @Named("idToChatroomEntity")
-    protected Chatroom idToChatroomEntity(Long id) {
-        if (id == null) {
-            return null;
-        }
-        return chatroomRepository.getReferenceById(id);
-    }
-
-    @Named("idToMessageEntity")
-    protected Messages idToMessageEntity(Long id) {
-        if (id == null) {
-            return null;
-        }
-        return messageRepository.getReferenceById(id);
-    }
+    UserRepository userRepository = null;
 }
