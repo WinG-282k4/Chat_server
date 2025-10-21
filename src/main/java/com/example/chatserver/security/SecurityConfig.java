@@ -59,13 +59,15 @@ public class SecurityConfig {
 
         // Cho phép frontend (chạy ở bất kỳ đâu) gọi
         // Trong production, bạn nên đổi "*" thành "http://your-frontend-domain.com"
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 
         // Cho phép các phương thức này
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
         // Cho phép tất cả các header (bao gồm 'Authorization' và 'Content-Type')
         configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // Áp dụng cấu hình này cho tất cả các đường dẫn

@@ -38,9 +38,9 @@ public class UserController {
 //    }
 
     // Thêm user mới qua WebSocket khi user kết nối
-    @MessageMapping("/user.addUser")
+    @MessageMapping("/user.connect")
     @SendTo("users/topic")
-    public UserDTO addUser(
+    public UserDTO connect(
             @AuthenticationPrincipal UserPrincipal user
     ) {
         UserDTO ConnectUser = userService.connect(user.getUsername());
@@ -61,7 +61,7 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("user")
+    @GetMapping("/user")
     public ResponseEntity<List<UserDTO>> findConnectedUsers() {
         List<User> connectedUsers = userService.findConnectedUsers();
         List<UserDTO> userDTOs = connectedUsers.stream()
