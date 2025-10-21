@@ -85,13 +85,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI().substring(request.getContextPath().length());
+        String path = request.getRequestURI();
 
-        // Danh sách endpoint public (permitAll)
-        return path.equals("/api/auth/login")
+        // Các đường dẫn này sẽ được filter bỏ qua, không kiểm tra token
+        return path.startsWith("/api/auth") // Bỏ qua tất cả API xác thực
+                || path.equals("/")
                 || path.equals("/index.html")
-                || path.equals("/api/auth/register")
-                || path.equals("/api/auth/forgot-password"); // thêm nếu có
+                || path.equals("/login.html")
+                || path.equals("/register.html")
+                || path.startsWith("/css/")  // Bỏ qua tất cả file trong thư mục /css/
+                || path.startsWith("/js/")   // Bỏ qua tất cả file trong thư mục /js/
+                || path.startsWith("/ws");   // Bỏ qua WebSocket handshake endpoint
     }
 
 

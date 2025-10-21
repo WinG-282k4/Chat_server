@@ -41,27 +41,23 @@ public class UserController {
     @MessageMapping("/user.addUser")
     @SendTo("users/topic")
     public UserDTO addUser(
-            @Payload UserDTO user
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        User Euser = userMapper.toEntity(user);
-        userService.connect(Euser);
-        return UserDTO.builder()
-                .userId(Euser.getUserId())
-                .name(Euser.getName())
-                .build();
+        UserDTO ConnectUser = userService.connect(user.getUsername());
+        return ConnectUser;
     }
 
     //Disconnect user khi user ngắt kết nối
     @MessageMapping("/user.disconnectUser")
     @SendTo("users/topic")
     public UserDTO disconnectUser(
-            @Payload UserDTO user
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        User Euser = userMapper.toEntity(user);
-        userService.disconnect(Euser);
+
+        UserDTO Duser = userService.disconnect(user.getUsername());
         return UserDTO.builder()
-                .userId(Euser.getUserId())
-                .name(Euser.getName())
+                .userId(Duser.getUserId())
+                .name(Duser.getName())
                 .build();
     }
 

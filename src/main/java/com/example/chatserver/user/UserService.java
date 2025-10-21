@@ -108,31 +108,41 @@ public class UserService {
         return true;
     }
 
-    public void connect(User user) {
+    public UserDTO connect(String username) {
         // Logic to handle user connection
-        var existingUser = userRepository.findByUsername(user.getUsername())
+        var existingUser = userRepository.findByUsername(username)
                 .orElse(null);
         if (existingUser != null) {
-            log.debug("[UserService] Setting user status to ONLINE for user: " + user.getUsername());
+            log.debug("[UserService] Setting user status to ONLINE for user: " + username);
             existingUser.setStatus(Status.ONLINE);
             userRepository.save(existingUser);
+            return UserDTO.builder()
+                    .userId(existingUser.getUserId())
+                    .username(existingUser.getUsername())
+                    .name(existingUser.getName())
+                    .build();
         } else {
-            log.debug("[UserService] User not found for connection: " + user.getUsername());
-            return;
+            log.debug("[UserService] User not found for connection: " + username);
+            return null;
         }
     }
 
-    public void disconnect(User user) {
+    public UserDTO disconnect(String username) {
         // Logic to handle user disconnection
-        var existingUser = userRepository.findByUsername(user.getUsername())
+        var existingUser = userRepository.findByUsername(username)
                 .orElse(null);
         if (existingUser != null) {
-            log.debug("[UserService] Setting user status to OFFLINE for user: " + user.getUsername());
+            log.debug("[UserService] Setting user status to OFFLINE for user: " + username);
             existingUser.setStatus(Status.OFFLINE);
             userRepository.save(existingUser);
+            return UserDTO.builder()
+                    .userId(existingUser.getUserId())
+                    .username(existingUser.getUsername())
+                    .name(existingUser.getName())
+                    .build();
         } else {
-            log.debug("[UserService] User not found for disconnection: " + user.getUsername());
-            return;
+            log.debug("[UserService] User not found for disconnection: " + username);
+            return null ;
         }
     }
 
