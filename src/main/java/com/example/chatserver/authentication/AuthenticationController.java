@@ -1,5 +1,6 @@
 package com.example.chatserver.authentication;
 
+import com.example.chatserver.security.UserPrincipal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.Payload;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,6 +9,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,14 +54,14 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public ResponseEntity logout(HttpServletRequest request) {
-        // Logic to handle user logout
-        // Get jti from request attribute set by JwtFilter
-        String Spayload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
-        Payload jwtPayload = new Payload(Spayload);
-        String jti = jwtPayload.toJSONObject().get("jti").toString();
-        Long exp = jwtPayload.toJSONObject().get("exp") != null ? Long.parseLong(jwtPayload.toJSONObject().get("exp").toString()) : null;
+        // Lấy JTI và EXP từ request attributes mà filter đã set
+        String jti = (String) request.getAttribute("jwtJti");
+        Long exp = (Long) request.getAttribute("jwtExp");
+
         if (jti != null && exp != null) {
-            authenticationService.logout(jti, exp);
+            // Chuyển đổi exp (milliseconds) sang đối tượng Date nếu cần
+            // Hoặc đảm bảo service của bạn chấp nhận Long
+            authenticationService.logout(jti, exp); // service nhận (String, Long)
         }
         return ResponseEntity.ok(Map.of(
                 "status", "success",
@@ -69,25 +71,20 @@ public class AuthenticationController {
 
 
     @PostMapping("/introspect")
-    public ResponseEntity introspect(HttpServletRequest request) {
-        String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
-        System.out.println(payload);
-        String sub = null;
-        if (payload != null) {
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> json = mapper.readValue(payload, Map.class);
-                sub = (String) json.get("sub");
-                System.out.println(json.get("sub"));
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().body(e.getMessage());
-            }
+    public ResponseEntity introspect(
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        // Spring Security sẽ tự động lấy user từ SecurityContext cho bạn
+        // Nếu userPrincipal là null (token không hợp lệ), Spring sẽ chặn request từ trước
+
+        String username = null;
+        if (userPrincipal != null) {
+            username = userPrincipal.getUsername(); // Lấy username một cách an toàn
         }
+
         return ResponseEntity.ok(Map.of(
-                "active", sub != null,
-                "username", sub
+                "active", username != null,
+                "username", username
         ));
     }
-
 
 }

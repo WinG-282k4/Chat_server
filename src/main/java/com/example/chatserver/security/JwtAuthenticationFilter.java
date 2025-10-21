@@ -6,6 +6,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;
+import com.zaxxer.hikari.pool.HikariProxyCallableStatement;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +49,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 //        System.out.println("Extracted token: " + token); // Log token
 
+        if (token == null) {
+            // Nếu không có token (request ẩn danh), cho nó đi tiếp.
+            // SecurityFilterChain sẽ quyết định nó có được phép hay không.
+            filterChain.doFilter(request, response);
+            return; // Dừng xử lý tại đây
+        }
+
         JWSObject jwsObject = null;
         try {
             jwsObject = JWSObject.parse(token);
@@ -79,24 +87,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // Gửi payload (dạng JSON object) và jti cho Controller
+        // để xử lý logout và introspect
+        Object expObj = jwsObject.getPayload().toJSONObject().get("exp");
+        Date expTime = new Date(0);
+        if (expObj instanceof Number) {
+            long expSeconds = ((Number) expObj).longValue();
+            expTime = new Date(expSeconds * 1000);
+        }
+
+        request.setAttribute("jwtClaims", jwsObject.getPayload().toJSONObject());
+        request.setAttribute("jwtJti", jti); // Gửi JTI (mã định danh token)
+        request.setAttribute("jwtExp", expTime); // Gửi thời gian hết hạn (dạng long)
+
         //Chuyển tiếp nếu xác thực thành công
         filterChain.doFilter(request, response);
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-
-        // Các đường dẫn này sẽ được filter bỏ qua, không kiểm tra token
-        return path.startsWith("/api/auth") // Bỏ qua tất cả API xác thực
-                || path.equals("/")
-                || path.equals("/index.html")
-                || path.equals("/login.html")
-                || path.equals("/register.html")
-                || path.startsWith("/css/")  // Bỏ qua tất cả file trong thư mục /css/
-                || path.startsWith("/js/")   // Bỏ qua tất cả file trong thư mục /js/
-                || path.startsWith("/ws");   // Bỏ qua WebSocket handshake endpoint
-    }
+//    @Override
+//    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+//        String path = request.getRequestURI();
+//
+//        // Các đường dẫn này sẽ được filter bỏ qua, không kiểm tra token
+//        return path.startsWith("/api/auth") // Bỏ qua tất cả API xác thực
+//                || path.equals("/")
+//                || path.equals("/index.html")
+//                || path.equals("/login.html")
+//                || path.equals("/register.html")
+//                || path.startsWith("/css/")  // Bỏ qua tất cả file trong thư mục /css/
+//                || path.startsWith("/js/")   // Bỏ qua tất cả file trong thư mục /js/
+//                || path.startsWith("/ws");   // Bỏ qua WebSocket handshake endpoint
+//    }
 
 
     public boolean introspectToken(String token) {

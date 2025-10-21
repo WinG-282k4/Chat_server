@@ -21,7 +21,8 @@ async function login(event) {
     errorMessage.textContent = ''; // Xóa lỗi cũ
 
     try {
-        const response = await fetch('/api/auth/login', {
+        // <-- SỬA: Thêm URL đầy đủ
+        const response = await fetch('http://localhost:8081/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -30,10 +31,11 @@ async function login(event) {
         if (response.ok) {
             const data = await response.json();
 
-            // Giả sử API login trả về { token: "...", user: { username: "...", ... } }
-            // Sửa lại 'data.token' và 'data.user.username' cho khớp với API của bạn
+            // <-- SỬA: Lưu userId và name (thay vì username)
+            // Giả sử server trả về: { "token": "...", "userId": 123, "name": "Thanh" }
             localStorage.setItem('jwtToken', data.token);
-            localStorage.setItem('username', data.user.username); // Lưu username
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('name', data.name);
 
             // Đăng nhập thành công, chuyển sang trang chat
             window.location.href = 'index.html';
@@ -55,7 +57,8 @@ async function register(event) {
     errorMessage.textContent = ''; // Xóa lỗi cũ
 
     try {
-        const response = await fetch('/api/auth/register', {
+        // <-- SỬA: Thêm URL đầy đủ
+        const response = await fetch('http://localhost:8081/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, name, password }) // Đảm bảo DTO của bạn khớp
