@@ -8,6 +8,7 @@ import com.example.chatserver.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +39,7 @@ public class MessageService {
     ) {
         return messageRepository.findContentBySenderIdAndReceiverId(senderId, receiverId);
     }
+
     @Transactional
     public Messages save(Messages msg) {
 
@@ -55,7 +57,6 @@ public class MessageService {
         return messageRepository.save(msg);
     }
 
-    @Transactional
     public MessageDTO CreateMessage(MessageDTO message) {
 
         Messages msg = messageConvecter.toEntity(message);
@@ -73,7 +74,7 @@ public class MessageService {
                 .build();
     }
 
-    @Transactional
+    //Find all messages between sender and receiver
     public List<MessageDTO> findAllMessages(
             Long senderId,
             Long receiverId
@@ -88,7 +89,7 @@ public class MessageService {
     }
 
     @Transactional
-    public MessageDTO updateMessage(MessageDTO newMessage) {
+    public ResponseEntity<MessageDTO> updateMessage(MessageDTO newMessage) {
         Messages existingMessage = messageRepository.findById(newMessage.getMessageId())
                 .orElseThrow(() -> new RuntimeException("Message not found"));
 
@@ -101,14 +102,15 @@ public class MessageService {
         Messages updatedMessage = save(existingMessage);
 
         // Convert to DTO
-        return MessageDTO.builder()
+        return ResponseEntity.ok(MessageDTO.builder()
                 .messageId(newMessage.getMessageId())
                 .senderId(updatedMessage.getSenderId())
                 .receiverId(updatedMessage.getReceiverId())
                 .chatroomId(updatedMessage.getChatroomId())
                 .content(updatedMessage.getContent())
                 .timestamp(updatedMessage.getTimestamp())
-                .build();
+                .build()
+        );
     }
 
     public void DeleteMessage(Long id, String username) {

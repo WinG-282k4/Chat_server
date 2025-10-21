@@ -140,5 +140,12 @@ public class UserService {
         // Logic to find connected users
         return userRepository.findAllByStatus(Status.ONLINE);
     }
+
+    //Get ID by username
+    public Long getUserIdByUsername(String username) {
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getUserId();
+    }
 }
 

@@ -1,8 +1,6 @@
 package com.example.chatserver.user;
 
-import com.example.chatserver.common.ApiResponse;
 import com.example.chatserver.security.UserPrincipal;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -76,7 +75,7 @@ public class UserController {
     }
 
     @GetMapping("/myinfo")
-    public ApiResponse getUsers(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<Map<String, Object>> getUsers(@AuthenticationPrincipal UserPrincipal userPrincipal) {
 
         User user = Repository.findByUsername(userPrincipal.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -86,31 +85,41 @@ public class UserController {
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .name(user.getName())
-                .password("******")   // ⚠️ thường không nên trả về password trong API
                 .email(user.getEmail())
                 .verify(user.getVerify())
                 .build();
 
-        return new ApiResponse("success", "Fetched users successfully", userDTO);
+        return ResponseEntity.ok(Map.of(
+                "status", "successful",
+                "data", userDTO
+        ));
     }
 
     @PostMapping("/update")
-    public ApiResponse updateUser(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> updateUser(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody UserDTO userDTO) {
         userDTO.setUsername(userPrincipal.getUsername());
         UserDTO updatedUser = userService.updateUser(userDTO);
 //        System.out.println(updatedUser);
-        return new ApiResponse("success", "User updated successfully", updatedUser);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @PostMapping("change-password")
-    public ApiResponse changePassword(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody ChangePasswordRequest changePasswordRequest) {
+    public ResponseEntity changePassword(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody ChangePasswordRequest changePasswordRequest) {
 
         String sub = userPrincipal.getUsername();
         boolean result = userService.changePassword(sub, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
         if (result) {
-            return new ApiResponse("success", "Password changed successfully", null);
+            return ResponseEntity.ok(
+                    Map.of(
+                            "Status", "Change pass successful"
+                    )
+            );
         } else {
-            return new ApiResponse("error", "Failed to change password", null);
+            return ResponseEntity.ok(
+                    Map.of(
+                            "Status","Change pass failed"
+                    )
+            );
         }
     }
 

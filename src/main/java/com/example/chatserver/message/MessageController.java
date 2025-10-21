@@ -1,20 +1,19 @@
 package com.example.chatserver.message;
 
-import java.util.List;
-import java.util.Optional;
-
-import com.example.chatserver.common.ApiResponse;
 import com.example.chatserver.security.UserPrincipal;
-import com.example.chatserver.user.User;
-import com.example.chatserver.user.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
+import com.example.chatserver.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -45,35 +44,38 @@ public class MessageController {
     @Autowired
     private final MessageMapper Mapper;
 
-    // GET tất cả message
-    @GetMapping
-    public ApiResponse getAllMessages() {
-        return null;
-    }
+    @Autowired
+    private final UserService userService;
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     // GET message theo ID
-    @GetMapping("/{id}")
-    public ApiResponse getMessage(
-            @PathVariable Long id,
+    @GetMapping("/{receiverid}")
+    public ResponseEntity<List<MessageDTO>> getMessage(
+            @PathVariable Long receiverid,
             @AuthenticationPrincipal UserPrincipal user
     ) {
-        return null;
+        Long senderid = userService.getUserIdByUsername(user.getUsername());
+        return ResponseEntity.ok(messageService.findAllMessages(senderid, receiverid));
     }
 
-
     // POST tạo message mới
-    @MessageMapping("/chat.sendMessage") // Lắng nghe trên destination WebSocket
-    @SendTo("/topic/public") // Gửi kết quả đến topic này
-    public MessageDTO sendMessage(
+    @MessageMapping("/chat") // Lắng nghe trên destination WebSocket
+    public void sendMessage(
 //            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Payload MessageDTO chatMessage
     ) {
-        return null;
+        MessageDTO newmessage = messageService.CreateMessage(chatMessage);
+        messagingTemplate.convertAndSendToUser(
+                newmessage.getReceiverId().toString(),"/queue/messages",
+                newmessage.getContent()
+        );
+
     }
 
     // PUT cập nhật message theo ID
     @PutMapping("/{id}") // ID của message cần cập nhật
-    public ApiResponse updateMessage(
+    public ResponseEntity updateMessage(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long id,
             @RequestBody MessageDTO newMessage
@@ -83,12 +85,14 @@ public class MessageController {
 
     // DELETE message theo ID
     @DeleteMapping("/{id}")
-    public ApiResponse deleteMessage(
+    public ResponseEntity deleteMessage(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long id
     ) {
         messageService.DeleteMessage(id, userPrincipal.getUsername());
-        return new ApiResponse("success", "Delete message success", null);
+        return ResponseEntity.ok(Map.of(
+                "status", "Delete successful"
+                ));
     }
 
 }

@@ -1,17 +1,18 @@
 package com.example.chatserver.authentication;
 
-import com.example.chatserver.common.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.Payload;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.View;
 
 import java.util.Map;
 
@@ -23,6 +24,8 @@ public class AuthenticationController {
 
     @Autowired
     private  AuthenticationService authenticationService;
+    @Autowired
+    private View error;
 
     @PostMapping("/register")
     public ResponseEntity register(@RequestBody Authentication authentication) {
@@ -32,20 +35,23 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ApiResponse login(@RequestBody Authentication authentication) {
+    public ResponseEntity login(@RequestBody Authentication authentication) {
         log.debug("[UserController] Password from request: " + authentication.getPassword());
         try {
             // Gọi service để login
             var authResponse = authenticationService.Login(authentication);
-            return new ApiResponse("success", "User logged in successfully", authResponse);
+            return ResponseEntity.ok(authResponse);
         } catch (RuntimeException e) {
             // Khi password sai hoặc user không tồn tại
-            return new ApiResponse("error", "Authentication failed", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "Status", "error",
+                            "message", e.getMessage()));
         }
     }
 
     @PostMapping("/logout")
-    public ApiResponse logout(HttpServletRequest request) {
+    public ResponseEntity logout(HttpServletRequest request) {
         // Logic to handle user logout
         // Get jti from request attribute set by JwtFilter
         String Spayload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
@@ -55,12 +61,15 @@ public class AuthenticationController {
         if (jti != null && exp != null) {
             authenticationService.logout(jti, exp);
         }
-        return new ApiResponse("success", "User logged out successfully", null);
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Logged out successfully"
+        ));
     }
 
 
     @PostMapping("/introspect")
-    public ApiResponse introspect(HttpServletRequest request) {
+    public ResponseEntity introspect(HttpServletRequest request) {
         String payload = request.getAttribute("jwtPayload") != null ? (String) request.getAttribute("jwtPayload") : null;
         System.out.println(payload);
         String sub = null;
@@ -71,10 +80,13 @@ public class AuthenticationController {
                 sub = (String) json.get("sub");
                 System.out.println(json.get("sub"));
             } catch (Exception e) {
-                return new ApiResponse("error", "Invalid payload format", null);
+                return ResponseEntity.badRequest().body(e.getMessage());
             }
         }
-        return new ApiResponse("success", "Token introspected successfully", sub);
+        return ResponseEntity.ok(Map.of(
+                "active", sub != null,
+                "username", sub
+        ));
     }
 
 
