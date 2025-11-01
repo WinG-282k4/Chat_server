@@ -11,6 +11,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -72,13 +73,14 @@ public class MessageController {
     ) {
 
         //Get authentication from principal
-//        AuthenticationPrincipal auth = (AuthenticationPrincipal) principal;
-        UserPrincipal user = (UserPrincipal) principal;
+        Authentication auth = (Authentication) principal;
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
         chatMessage.setSenderId(userService.getUserIdByUsername(user.getUsername()));
         MessageDTO newmessage = messageService.CreateMessage(chatMessage);
+        String receiverUsername = userService.getUsernameByUserId(newmessage.getReceiverId());
         messagingTemplate.convertAndSendToUser(
-                newmessage.getReceiverId().toString(),"/queue/messages",
-                newmessage.getContent()
+                receiverUsername,"/queue/messages",
+                newmessage
         );
 
     }

@@ -31,7 +31,7 @@ public class Messages {
     @Column(name = "receiver_id", nullable = false)
     private Long receiverId;
 
-    @Column(name = "chat_room_id")
+    @Column(name = "chat_room_id", nullable = false)
     private Long chatroomId;
 
     @Column(name = "reply_to_message_id")

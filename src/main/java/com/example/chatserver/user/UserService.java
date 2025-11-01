@@ -157,5 +157,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return user.getUserId();
     }
+
+    public String getUsernameByUserId(Long receiverId) {
+        var user = userRepository.findById(receiverId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getUsername();
+    }
 }
 

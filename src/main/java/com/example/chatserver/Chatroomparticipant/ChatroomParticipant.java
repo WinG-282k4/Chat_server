@@ -3,7 +3,11 @@ package com.example.chatserver.Chatroomparticipant;
 import com.example.chatserver.chatroom.Chatroom;
 import com.example.chatserver.user.User;
 import jakarta.persistence.*;
+import lombok.*;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "chatroom_participants")
 public class ChatroomParticipant {
@@ -28,49 +32,5 @@ public class ChatroomParticipant {
         ADMIN,
         MEMBER,
         GUEST
-    }
-
-    public ChatroomParticipant() {
-        // Default constructor
-    }
-
-    public ChatroomParticipant(Chatroom chatroom, User user, role participantRole) {
-        this.chatroom = chatroom;
-        this.user = user;
-        this.participantRole = participantRole;
-    }
-
-    // Getters and Setters
-
-    public Long getChatroomParticipantId() {
-        return ChatroomParticipantId;
-    }
-
-    public void setChatroomParticipantId(Long chatroomParticipantId) {
-        ChatroomParticipantId = chatroomParticipantId;
-    }
-
-    public Chatroom getChatroom() {
-        return chatroom;
-    }
-
-    public void setChatroom(Chatroom chatroom) {
-        this.chatroom = chatroom;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public role getParticipantRole() {
-        return participantRole;
-    }
-
-    public void setParticipantRole(role participantRole) {
-        this.participantRole = participantRole;
     }
 }

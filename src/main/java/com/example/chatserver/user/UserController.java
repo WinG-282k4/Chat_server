@@ -43,7 +43,7 @@ public class UserController {
 
     // Thêm user mới qua WebSocket khi user kết nối
     @MessageMapping("/user.connect")
-    @SendTo("users/topic")
+    @SendTo("/users/topic")
     public UserDTO connect(
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal
@@ -57,7 +57,7 @@ public class UserController {
 
     //Disconnect user khi user ngắt kết nối
     @MessageMapping("/user.disconnectUser")
-    @SendTo("users/topic")
+    @SendTo("/users/topic")
     public UserDTO disconnectUser(
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal

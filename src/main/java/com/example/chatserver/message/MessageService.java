@@ -1,6 +1,7 @@
 package com.example.chatserver.message;
 
 import com.example.chatserver.chatroom.Chatroom;
+import com.example.chatserver.chatroom.ChatroomRepository;
 import com.example.chatserver.chatroom.ChatroomService;
 import com.example.chatserver.user.User;
 import com.example.chatserver.user.UserRepository;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +32,9 @@ public class MessageService {
     @Autowired
     private final ChatroomService chatroomService;
 
+    @Autowired // <-- 1. ĐẢM BẢO BẠN CÓ DÒNG NÀY
+    private final ChatroomRepository chatroomRepository;
+
     // This class will contain business logic related to messages
     // For example, methods to create, update, delete, and retrieve messages
 
@@ -44,16 +49,22 @@ public class MessageService {
     public Messages save(Messages msg) {
 
         //SetChatRoom ID
-        if (msg.getChatroom() == null && msg.getReceiver() != null) {
+        if (msg.getChatroom() == null && msg.getReceiverId() != null) {
+
+            // Lấy ID
             Long chatroomId = chatroomService.getChatroomId(
-                    msg.getSender().getUserId(),
-                    msg.getReceiver().getUserId(),
+                    msg.getSenderId(),
+                    msg.getReceiverId(),
                     true
             ).orElseThrow(() -> new RuntimeException("Failed to get or create chatroom"));
+
+            // Gán ĐỐI TƯỢNG Chatroom
             msg.setChatroomId(chatroomId);
         }
-        // Set the timestamp
+
         msg.setTimestamp(System.currentTimeMillis());
+
+        // 5. Bây giờ lệnh save này sẽ THÀNH CÔNG
         return messageRepository.save(msg);
     }
 
@@ -64,14 +75,7 @@ public class MessageService {
 
         msg = save(msg);
 
-        return MessageDTO.builder()
-                .messageId(msg.getMessageId())
-                .senderId(msg.getSenderId())
-                .receiverId(msg.getReceiverId())
-                .chatroomId(msg.getChatroomId())
-                .content(msg.getContent())
-                .timestamp(msg.getTimestamp())
-                .build();
+        return messageConvecter.toDTO(msg);
     }
 
     //Find all messages between sender and receiver
@@ -83,8 +87,12 @@ public class MessageService {
                 senderId,
                 receiverId,
                 false
-        ).orElseThrow(() -> new RuntimeException("Chatroom not found"));
-        var messages = messageRepository.findAllBychatroomId(ChatroomId);
+        );
+        if (ChatroomId.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        var messages = messageRepository.findAllBychatroomId(ChatroomId.get());
         return messageConvecter.toDTOs(messages);
     }
 

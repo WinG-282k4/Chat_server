@@ -34,7 +34,8 @@ public class ChatroomService {
 
     private Long createChatroom(Long senderId, Long receiverId) {
         var chatId = String.format("%s_%s_%s", senderId, receiverId, System.currentTimeMillis());
-        Long chatIdlong = Long.parseLong(chatId.replace("_", "").substring(0, 18));
+        String numericChatId = chatId.replace("_", "");
+        Long chatIdlong = Long.parseLong(numericChatId.substring(0, Math.min(18, numericChatId.length())));
 
         Chatroom senderRiceiverChatroom = Chatroom.builder()
                 .chatroomId(chatIdlong) // Giới hạn độ dài ID

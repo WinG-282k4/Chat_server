@@ -39,7 +39,7 @@ function onConnected() {
     // Subscribe to per-user queue (standard Spring destination, no userId in path)
     stompClient.subscribe('/user/queue/messages', onMessageReceived);
     // Subscribe to users topic (backend should send to /topic/users)
-    stompClient.subscribe('/topic/users', onMessageReceived);
+    stompClient.subscribe('/users/topic', onMessageReceived);
 
     // Notify backend user connected (align with @MessageMapping("/user.connect"))
     stompClient.send('/app/user.connect', {});
