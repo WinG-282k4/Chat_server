@@ -17,15 +17,21 @@ public class ChatroomService {
     // This class will contain business logic related to chatrooms
     // For example, methods to create, update, delete, and retrieve chatrooms
     public Optional<Long> getChatroomId(
-            Long SenderId,
-            Long ReceiverId,
+            Long senderId,
+            Long receiverId,
             boolean createIfNotExist
     ) {
-        return  chatroomRepository.findChatroomIdBySenderIdAndReceiverId(SenderId, ReceiverId)
-                .map(chatroom -> chatroom.getChatroomId())
+        // Tìm chatroom theo cả 2 chiều
+        Optional<Chatroom> chatroomOpt = chatroomRepository
+                .findChatroomIdBySenderIdAndReceiverId(senderId, receiverId)
+                .or(() -> chatroomRepository.findChatroomIdBySenderIdAndReceiverId(receiverId, senderId));
+
+        // Nếu tìm thấy -> trả về chatroomId
+        // Nếu không tìm thấy và createIfNotExist = true -> tạo mới
+        return chatroomOpt.map(Chatroom::getChatroomId)
                 .or(() -> {
-                    if(createIfNotExist) {
-                        var chatId = createChatroom(SenderId, ReceiverId);
+                    if (createIfNotExist) {
+                        Long chatId = createChatroom(senderId, receiverId);
                         return Optional.of(chatId);
                     }
                     return Optional.empty();
@@ -46,17 +52,7 @@ public class ChatroomService {
                 .isActive(true)
                 .build();
 
-        Chatroom ReceiverSenderChatroom = Chatroom.builder()
-                .chatroomId(chatIdlong) // Giới hạn độ dài ID
-                .senderId(receiverId)
-                .receiverId(senderId)
-                .createdById(null)
-                .createdAt(System.currentTimeMillis())
-                .isActive(true)
-                .build();
-
         chatroomRepository.save(senderRiceiverChatroom);
-        chatroomRepository.save(ReceiverSenderChatroom);
 
         return chatIdlong;
     }

@@ -161,24 +161,30 @@ function sendMessage(event) {
     chatArea.scrollTop = chatArea.scrollHeight;
 }
 
+// main.js
 async function onMessageReceived(payload) {
-    await findAndDisplayConnectedUsers();
-
     const message = JSON.parse(payload.body);
 
     if (message.content) {
-        if (selectedUserId && selectedUserId.toString() === message.senderId?.toString()) {
+        if (selectedUserId &&
+            (selectedUserId.toString() === message.senderId?.toString() ||
+                selectedUserId.toString() === message.receiverId?.toString())) {
             displayMessage(message.senderId, message.content);
             chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        const notifiedUser = document.querySelector(`#${message.senderId}`);
-        if (notifiedUser && !notifiedUser.classList.contains('active')) {
-            const nbrMsg = notifiedUser.querySelector('.nbr-msg');
-            nbrMsg.classList.remove('hidden');
-            nbrMsg.textContent = '';
+        } else {
+            // Update unread count for the sender or receiver
+            const userIdToNotify = message.senderId === userId ? message.receiverId : message.senderId;
+            // Use getElementById to avoid CSS selector issues with numeric IDs
+            const notifiedUser = document.getElementById(String(userIdToNotify));
+            if (notifiedUser && !notifiedUser.classList.contains('active')) {
+                const nbrMsg = notifiedUser.querySelector('.nbr-msg');
+                nbrMsg.classList.remove('hidden');
+                nbrMsg.textContent = (parseInt(nbrMsg.textContent) || 0) + 1;
+            }
         }
     }
+    // Optionally update user list
+    findAndDisplayConnectedUsers();
 }
 
 async function onLogout() {

@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.security.core.Authentication;
@@ -67,22 +66,22 @@ public class MessageController {
     // POST tạo message mới
     @MessageMapping("/chat") // Lắng nghe trên destination WebSocket
     public void sendMessage(
-//            @AuthenticationPrincipal UserPrincipal userPrincipal,
             Principal principal,
             @Payload MessageDTO chatMessage
     ) {
 
-        //Get authentication from principal
-        Authentication auth = (Authentication) principal;
-        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
-        chatMessage.setSenderId(userService.getUserIdByUsername(user.getUsername()));
+        // Lấy username từ Principal để đồng bộ với user-destination
+        String username = principal.getName();
+        chatMessage.setSenderId(userService.getUserIdByUsername(username));
+
         MessageDTO newmessage = messageService.CreateMessage(chatMessage);
         String receiverUsername = userService.getUsernameByUserId(newmessage.getReceiverId());
+
+        // Gửi tới đích cá nhân của người nhận
         messagingTemplate.convertAndSendToUser(
-                receiverUsername,"/queue/messages",
+                receiverUsername, "/queue/messages",
                 newmessage
         );
-
     }
 
     @MessageExceptionHandler
