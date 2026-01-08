@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # --- Service 1: MySQL Database ---
+  mysqldb:
+    image: mysql:8.0
+    container_name: chatserver_db
+    restart: always
+    environment:
+      # Cấu hình user/pass khớp với file properties của bạn
+      MYSQL_DATABASE: chatserver
+      MYSQL_ROOT_PASSWORD: '282004'
+    ports:
+      - "3307:3306" # Map port 3307 máy thật -> 3306 container
+    volumes:
+      - mysql_data:/var/lib/mysql # Lưu dữ liệu để không bị mất khi tắt container
+
+  # --- Service 2: Spring Boot App ---
+  chat-app:
+    build: . # Build từ Dockerfile ở thư mục hiện tại
+    container_name: chatserver_app
+    restart: on-failure
+    ports:
+      - "8081:8081" # Map port 8081 ra ngoài
+    depends_on:
+      - mysqldb # Chờ database khởi động xong mới chạy app
+    environment:
+      # GHI ĐÈ cấu hình trong application.properties
+      # Spring Boot tự động map: spring.datasource.url -> SPRING_DATASOURCE_URL
+      
+      # Quan trọng: Thay 'localhost' bằng tên service 'mysqldb'
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/chatserver?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=282004
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+volumes:
+  mysql_data:
