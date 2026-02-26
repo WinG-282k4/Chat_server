@@ -60,6 +60,8 @@ public class AuthenticationService {
         return UserDTO.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
+                .name(user.getName())
+                .email(user.getEmail())
                 .build();
     }
 
