@@ -48,6 +48,8 @@ public class UserController {
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal
     ) {
+        // Log invocation for debugging
+        log.debug("[UserController] connect invoked, principal=" + (principal != null ? principal.getName() : "null"));
         // Use principal.getName() instead of casting to Authentication/UserPrincipal
         String username = (principal != null) ? principal.getName() : null;
         if (username == null) {
@@ -55,6 +57,7 @@ public class UserController {
             return null;
         }
         UserDTO ConnectUser = userService.connect(username);
+        log.debug("[UserController] connect: user connected -> " + (ConnectUser != null ? ConnectUser.getUsername() : "null"));
         return ConnectUser;
     }
 
@@ -65,6 +68,7 @@ public class UserController {
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal
     ) {
+        log.debug("[UserController] disconnectUser invoked, principal=" + (principal != null ? principal.getName() : "null"));
         // Use principal.getName() instead of casting to Authentication/UserPrincipal
         String username = (principal != null) ? principal.getName() : null;
         if (username == null) {
@@ -76,6 +80,7 @@ public class UserController {
             log.warn("[UserController] disconnectUser: userService.disconnect returned null for " + username);
             return null;
         }
+        log.debug("[UserController] disconnectUser: user disconnected -> " + Duser.getUsername());
         return UserDTO.builder()
                 .userId(Duser.getUserId())
                 .name(Duser.getName())
