@@ -56,12 +56,27 @@ public class AuthenticationController {
     public ResponseEntity logout(HttpServletRequest request) {
         // Lấy JTI và EXP từ request attributes mà filter đã set
         String jti = (String) request.getAttribute("jwtJti");
-        Long exp = (Long) request.getAttribute("jwtExp");
+        Object expAttr = request.getAttribute("jwtExp");
 
-        if (jti != null && exp != null) {
-            // Chuyển đổi exp (milliseconds) sang đối tượng Date nếu cần
-            // Hoặc đảm bảo service của bạn chấp nhận Long
-            authenticationService.logout(jti, exp); // service nhận (String, Long)
+        Long expSeconds = null;
+        if (expAttr instanceof java.util.Date) {
+            // convert milliseconds -> seconds
+            expSeconds = ((java.util.Date) expAttr).getTime() / 1000L;
+        } else if (expAttr instanceof Number) {
+            expSeconds = ((Number) expAttr).longValue();
+        } else if (expAttr instanceof String) {
+            try {
+                expSeconds = Long.parseLong((String) expAttr);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        if (jti != null && expSeconds != null) {
+            // Chuyển đổi exp (seconds) sang đối tượng Date nếu cần
+            authenticationService.logout(jti, expSeconds); // service nhận (String, Long)
+        } else {
+            if (jti == null) log.warn("[AuthenticationController] logout: jwtJti is null");
+            if (expSeconds == null) log.warn("[AuthenticationController] logout: jwtExp is null or unparseable (" + expAttr + ")");
         }
         return ResponseEntity.ok(Map.of(
                 "status", "success",

@@ -48,10 +48,13 @@ public class UserController {
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal
     ) {
-        //Get userPrincipal from principal
-        Authentication auth = (Authentication) principal;
-        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
-        UserDTO ConnectUser = userService.connect(user.getUsername());
+        // Use principal.getName() instead of casting to Authentication/UserPrincipal
+        String username = (principal != null) ? principal.getName() : null;
+        if (username == null) {
+            log.warn("[UserController] connect: Principal or username is null");
+            return null;
+        }
+        UserDTO ConnectUser = userService.connect(username);
         return ConnectUser;
     }
 
@@ -62,10 +65,17 @@ public class UserController {
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal
     ) {
-        //Get userPrincipal from principal
-        Authentication auth = (Authentication) principal;
-        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
-        UserDTO Duser = userService.disconnect(user.getUsername());
+        // Use principal.getName() instead of casting to Authentication/UserPrincipal
+        String username = (principal != null) ? principal.getName() : null;
+        if (username == null) {
+            log.warn("[UserController] disconnectUser: Principal or username is null");
+            return null;
+        }
+        UserDTO Duser = userService.disconnect(username);
+        if (Duser == null) {
+            log.warn("[UserController] disconnectUser: userService.disconnect returned null for " + username);
+            return null;
+        }
         return UserDTO.builder()
                 .userId(Duser.getUserId())
                 .name(Duser.getName())

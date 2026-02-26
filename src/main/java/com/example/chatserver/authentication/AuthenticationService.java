@@ -53,6 +53,8 @@ public class AuthenticationService {
         User user = new User();
         user.setUsername(authentication.getUsername());
         user.setPassword(hashedPassword);
+        user.setName(authentication.getName());
+        user.setEmail(authentication.getEmail());
 
         userRepository.save(user);
         return UserDTO.builder()
@@ -115,10 +117,23 @@ public class AuthenticationService {
             JWSObject jwsObject = JWSObject.parse(token);
             JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
-            Date expTime = jwsObject.getPayload().toJSONObject().get("exp") == null ? new Date(0) : new Date((Long) jwsObject.getPayload().toJSONObject().get("exp") * 1000);
+            Object expObj = jwsObject.getPayload().toJSONObject().get("exp");
+            java.util.Date expTime = new java.util.Date(0);
+            if (expObj instanceof Number) {
+                long expSeconds = ((Number) expObj).longValue();
+                expTime = new java.util.Date(expSeconds * 1000);
+            } else if (expObj instanceof String) {
+                try {
+                    long expSeconds = Long.parseLong((String) expObj);
+                    expTime = new java.util.Date(expSeconds * 1000);
+                } catch (NumberFormatException ignored) {
+                }
+            } else if (expObj instanceof java.util.Date) {
+                expTime = (java.util.Date) expObj;
+            }
 
             return IntrospectResponse.builder()
-                    .active(jwsObject.verify(verifier) && expTime.after(new Date()))
+                    .active(jwsObject.verify(verifier) && expTime.after(new java.util.Date()))
                     .build();
         } catch (Exception e) {
             log.error("[UserService] Error while introspecting token: " + e.getMessage());

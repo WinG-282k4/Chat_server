@@ -17,4 +17,7 @@ public class Authentication {
     @NotBlank
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
+    private String name;
+    private String email;
 }
