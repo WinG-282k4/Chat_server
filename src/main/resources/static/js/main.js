@@ -38,11 +38,16 @@ function connect() {
 function onConnected() {
     // Subscribe to per-user queue (standard Spring destination, no userId in path)
     stompClient.subscribe('/user/queue/messages', onMessageReceived);
-    // Subscribe to users topic (backend should send to /topic/users)
-    stompClient.subscribe('/users/topic', onMessageReceived);
+    // Subscribe to topic broadcasts (server sends to /topic)
+    stompClient.subscribe('/topic', onMessageReceived);
 
-    // Notify backend user connected (align with @MessageMapping("/user.connect"))
-    stompClient.send('/app/user.connect', {});
+    // Notify backend that this user connected so server can mark them ONLINE
+    try {
+        stompClient.send('/app/user.connect', {}, {});
+        console.log('Sent /app/user.connect');
+    } catch (e) {
+        console.warn('Failed to send /app/user.connect', e);
+    }
 
     document.querySelector('#connected-user-fullname').textContent = name;
     findAndDisplayConnectedUsers().then();

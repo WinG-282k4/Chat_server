@@ -43,13 +43,14 @@ public class UserController {
 
     // Thêm user mới qua WebSocket khi user kết nối
     @MessageMapping("/user.connect")
-    @SendTo("/users/topic")
+    @SendTo("/topic")
     public UserDTO connect(
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal
     ) {
         // Log invocation for debugging
         log.debug("[UserController] connect invoked, principal=" + (principal != null ? principal.getName() : "null"));
+        System.out.println("[UserController] CONNECT called, principal=" + (principal != null ? principal.getName() : "null"));
         // Use principal.getName() instead of casting to Authentication/UserPrincipal
         String username = (principal != null) ? principal.getName() : null;
         if (username == null) {
@@ -58,17 +59,19 @@ public class UserController {
         }
         UserDTO ConnectUser = userService.connect(username);
         log.debug("[UserController] connect: user connected -> " + (ConnectUser != null ? ConnectUser.getUsername() : "null"));
+        System.out.println("[UserController] CONNECT: connected user -> " + (ConnectUser != null ? ConnectUser.getUsername() : "null"));
         return ConnectUser;
     }
 
     //Disconnect user khi user ngắt kết nối
     @MessageMapping("/user.disconnectUser")
-    @SendTo("/users/topic")
+    @SendTo("/topic")
     public UserDTO disconnectUser(
 //            @AuthenticationPrincipal UserPrincipal user
             Principal principal
     ) {
         log.debug("[UserController] disconnectUser invoked, principal=" + (principal != null ? principal.getName() : "null"));
+        System.out.println("[UserController] DISCONNECT called, principal=" + (principal != null ? principal.getName() : "null"));
         // Use principal.getName() instead of casting to Authentication/UserPrincipal
         String username = (principal != null) ? principal.getName() : null;
         if (username == null) {
@@ -81,6 +84,7 @@ public class UserController {
             return null;
         }
         log.debug("[UserController] disconnectUser: user disconnected -> " + Duser.getUsername());
+        System.out.println("[UserController] DISCONNECT: user disconnected -> " + Duser.getUsername());
         return UserDTO.builder()
                 .userId(Duser.getUserId())
                 .name(Duser.getName())
