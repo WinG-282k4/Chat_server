@@ -27,25 +27,22 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        /// --- CÁC ĐƯỜNG DẪN CÔNG KHAI (PUBLIC) ---
                         .requestMatchers(
                                 "/",
                                 "/index.html",
                                 "/login.html",
                                 "/register.html",
-                                "/css/**",  // <-- Sửa: Cho phép mọi thứ trong /css/
-                                "/js/**",   // <-- Sửa: Cho phép mọi thứ trong /js/
-                                "/img/**",  // (Thêm nếu bạn có thư mục ảnh)
-                                "/ws/**",    // (Thêm nếu bạn cấu hình WebSocket endpoint)
+                                "/css/**",  // Cho phép mọi thứ trong /css/
+                                "/js/**",   // Cho phép mọi thứ trong /js/
+                                "/img/**",  //  thư mục ảnh
+                                "/ws/**",    // Thêm cấu hình WebSocket endpoint
                                 "/favicon.ico"
                         ).permitAll()
 
-                        // --- CÁC RULE XÁC THỰC (API) ---
                         // Rule CỤ THỂ phải đặt TRƯỚC rule CHUNG
                         .requestMatchers("/api/auth/introspect").authenticated()
-                        .requestMatchers("/api/auth/**").permitAll() // Rule chung đặt sau
+                        .requestMatchers("/api/auth/**").permitAll()
 
-                        // --- CÁC ĐƯỜNG DẪN CÒN LẠI ---
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -57,8 +54,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Cho phép frontend (chạy ở bất kỳ đâu) gọi
-        // Trong production, bạn nên đổi "*" thành "http://your-frontend-domain.com"
+        // Trong production, đổi "*" thành "http://your-frontend-domain.com"
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 
         // Cho phép các phương thức này
